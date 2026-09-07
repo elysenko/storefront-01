@@ -16,10 +16,15 @@ model User {
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  cart    Cart?
+  orders  Order[]
+  reviews Review[]
 }
 
 /// One value per role the stack contract declares (stacks/combos/enterprise.json auth.roles).
 /// Colossus mints one login per role; add app roles here AND to the contract, never demo users.
+/// Storefront maps its two spec roles onto these: `shopper` == USER, `admin` == ADMIN.
 enum Role {
   USER
   MANAGER
@@ -40,4 +45,140 @@ model ColossusAccount {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("colossus_accounts")
+}
+
+/// placed -> shipped -> delivered. Transitions are forward-only and single-step;
+/// the admin service rejects anything backwards or skipping with a 400.
+enum OrderStatus {
+  placed
+  shipped
+  delivered
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+/// `avgRating` / `reviewCount` are denormalized: every review write recomputes them
+/// from the aggregate inside the same transaction. Deletion is soft (`deletedAt`), so
+/// historical OrderItem and Review rows survive an admin delete.
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  priceCents  Int
+  imageUrl    String
+  stockQty    Int       @default(0)
+  categoryId  String
+  avgRating   Float     @default(0)
+  reviewCount Int       @default(0)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  reviews    Review[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([deletedAt])
+}
+
+/// One review per (product, user); eligibility requires a delivered order containing the product.
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+}
+
+/// Server-side cart keyed on userId, so persistence across logins is inherent.
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  qty       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  status      OrderStatus @default(placed)
+  totalCents  Int
+  shipName    String
+  shipAddress String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+/// `productName`, `unitPriceCents` and `imageUrl` are frozen at checkout so a later
+/// price change or product delete never rewrites order history. `productId` is nullable
+/// (SetNull) and exists only for review-eligibility lookup.
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String?
+  productName    String
+  imageUrl       String
+  unitPriceCents Int
+  qty            Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+/// Runtime override layer for service credentials. `resolveConfig()` reads process.env
+/// first and falls back to this table when the env value is absent or a placeholder.
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
