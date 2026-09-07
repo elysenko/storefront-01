@@ -1,0 +1,165 @@
+<div class="page">
+  @if (!product()) {
+    <div class="card empty-state">
+      <h1>Product not found</h1>
+      <p>It may have been removed from the catalog.</p>
+      <a class="btn btn-primary" routerLink="/">Back to all products</a>
+    </div>
+  } @else {
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a routerLink="/">All products</a>
+      <span aria-hidden="true">/</span>
+      <a routerLink="/" [queryParams]="{ category: product()!.categoryId }">{{ product()!.categoryName }}</a>
+      <span aria-hidden="true">/</span>
+      <span class="current">{{ product()!.name }}</span>
+    </nav>
+
+    <div class="detail">
+      <div class="media card">
+        <img [src]="product()!.imageUrl" [alt]="product()!.name" width="480" height="480" />
+      </div>
+
+      <div class="summary">
+        <span class="category">{{ product()!.categoryName }}</span>
+        <h1>{{ product()!.name }}</h1>
+
+        <div class="rating-row">
+          <app-star-rating [rating]="product()!.avgRating" [count]="product()!.reviewCount" />
+          @if (product()!.reviewCount > 0) {
+            <a class="jump" routerLink="." [queryParams]="{ tab: 'reviews' }" queryParamsHandling="merge">
+              Read {{ product()!.reviewCount }} reviews
+            </a>
+          }
+        </div>
+
+        <p class="price">{{ product()!.priceCents | money }}</p>
+
+        @if (inStock()) {
+          <p class="stock in">In stock — {{ product()!.stockQty }} available</p>
+        } @else {
+          <p class="stock out">Out of stock</p>
+        }
+
+        @if (addError()) {
+          <div class="alert alert-error" role="alert">{{ addError() }}</div>
+        }
+
+        <div class="buy card">
+          @if (inStock()) {
+            <div class="qty">
+              <span class="qty-label">Quantity</span>
+              <div class="stepper">
+                <button type="button" (click)="stepQty(-1)" [disabled]="qty() <= 1" aria-label="Decrease quantity">−</button>
+                <span class="qty-value" aria-live="polite">{{ qty() }}</span>
+                <button type="button" (click)="stepQty(1)" [disabled]="qty() >= maxQty()" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" (click)="addToCart()">
+              Add to cart
+            </button>
+
+            @if (!user()) {
+              <p class="hint">You'll be asked to sign in first.</p>
+            }
+          } @else {
+            <button type="button" class="btn btn-primary btn-block" disabled>Out of stock</button>
+            <p class="hint">We'll restock this line shortly — nothing is charged until dispatch.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs-block card">
+      <nav class="tabs" aria-label="Product information">
+        <a
+          class="tab"
+          [class.active]="tab() === 'description'"
+          routerLink="."
+          [queryParams]="{ tab: null }"
+          queryParamsHandling="merge"
+        >Description</a>
+        <a
+          class="tab"
+          [class.active]="tab() === 'reviews'"
+          routerLink="."
+          [queryParams]="{ tab: 'reviews' }"
+          queryParamsHandling="merge"
+        >Reviews ({{ product()!.reviewCount }})</a>
+      </nav>
+
+      <div class="tab-panel">
+        @if (tab() === 'description') {
+          <p class="description">{{ product()!.description }}</p>
+          <dl class="specs">
+            <div><dt>Category</dt><dd>{{ product()!.categoryName }}</dd></div>
+            <div><dt>Item code</dt><dd>{{ product()!.id | uppercase }}</dd></div>
+            <div><dt>Availability</dt><dd>{{ inStock() ? 'In stock' : 'Out of stock' }}</dd></div>
+          </dl>
+        } @else {
+          <div class="reviews-head">
+            <div>
+              <h2>Customer reviews</h2>
+              <app-star-rating [rating]="product()!.avgRating" [count]="product()!.reviewCount" />
+            </div>
+
+            @if (canReview()) {
+              <button type="button" class="btn btn-primary" (click)="openReview()">Write a review</button>
+            } @else if (user()) {
+              <p class="muted note">Only delivered purchases can be reviewed, once each.</p>
+            } @else {
+              <a class="btn btn-secondary" routerLink="/login">Sign in to review</a>
+            }
+          </div>
+
+          @if (reviews().length === 0) {
+            <div class="empty-state">
+              <p>No reviews yet. Be the first once your order arrives.</p>
+            </div>
+          } @else {
+            <ul class="review-list">
+              @for (review of reviews(); track review.id) {
+                <li class="review">
+                  <div class="review-head">
+                    <app-star-rating [rating]="review.rating" [compact]="true" />
+                    <span class="reviewer">{{ review.userEmail }}</span>
+                    <span class="when">{{ review.createdAt | date: 'mediumDate' }}</span>
+                  </div>
+                  <p class="review-body">{{ review.body }}</p>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    </div>
+
+    @if (related().length > 0) {
+      <section class="related">
+        <h2>More in {{ product()!.categoryName }}</h2>
+        <ul class="related-grid">
+          @for (item of related(); track item.id) {
+            <li>
+              <a class="related-card card" [routerLink]="['/products', item.id]">
+                <img [src]="item.imageUrl" [alt]="item.name" width="240" height="240" loading="lazy" />
+                <span class="related-name">{{ item.name }}</span>
+                <span class="related-price">{{ item.priceCents | money }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (reviewModalOpen()) {
+      <app-modal heading="Write a review" (closed)="closeReview()">
+        <app-review-form
+          [productName]="product()!.name"
+          [error]="reviewError()"
+          (submitted)="submitReview($event)"
+          (cancelled)="closeReview()"
+        />
+      </app-modal>
+    }
+  }
+</div>

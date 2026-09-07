@@ -1,0 +1,33 @@
+<article class="card product">
+  <a class="media" [routerLink]="['/products', product().id]" tabindex="-1" aria-hidden="true">
+    <img [src]="product().imageUrl" [alt]="product().name" width="480" height="480" loading="lazy" />
+  </a>
+
+  <div class="body">
+    <span class="category">{{ product().categoryName }}</span>
+    <h3 class="name">
+      <a [routerLink]="['/products', product().id]">{{ product().name }}</a>
+    </h3>
+
+    <app-star-rating [rating]="product().avgRating" [count]="product().reviewCount" [compact]="true" />
+
+    <p class="price">{{ product().priceCents | money }}</p>
+
+    @if (product().stockQty > 0) {
+      <span class="stock in">In stock</span>
+    } @else {
+      <span class="stock out">Out of stock</span>
+    }
+  </div>
+
+  <div class="foot">
+    <button
+      type="button"
+      class="btn btn-primary btn-block"
+      [disabled]="product().stockQty === 0"
+      (click)="added.emit(product())"
+    >
+      {{ product().stockQty === 0 ? 'Unavailable' : 'Add to cart' }}
+    </button>
+  </div>
+</article>

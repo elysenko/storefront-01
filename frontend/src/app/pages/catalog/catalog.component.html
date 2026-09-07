@@ -1,0 +1,90 @@
+<div class="page">
+  <section class="hero card">
+    <div class="hero-copy">
+      <p class="eyebrow">Free delivery over $50</p>
+      <h1>Everything for the home, the trail and the shelf.</h1>
+      <p class="lede">
+        Twelve things we actually use, across four categories. No endless scroll, no fake discounts.
+      </p>
+    </div>
+    <div class="hero-stats">
+      <div><strong>{{ catalogSize() }}</strong><span>products</span></div>
+      <div><strong>4</strong><span>categories</span></div>
+      <div><strong>2&nbsp;days</strong><span>typical delivery</span></div>
+    </div>
+  </section>
+
+  <div class="page-head">
+    <div>
+      <h2>{{ heading() }}</h2>
+      <p class="muted count-line">
+        @if (result().total > 0) {
+          Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ result().total }}
+          @if (query()) { <span>for “{{ query() }}”</span> }
+        } @else {
+          No matching products
+        }
+      </p>
+    </div>
+
+    @if (hasFilters()) {
+      <a class="btn btn-secondary" routerLink="/" [queryParams]="{ q: null, category: null, page: null }">
+        Clear filters
+      </a>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="grid" aria-hidden="true">
+      @for (skeleton of [1, 2, 3, 4, 5, 6, 7, 8]; track skeleton) {
+        <div class="card skeleton"></div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  } @else if (result().items.length === 0) {
+    <div class="card empty-state">
+      <h3>Nothing matched that search</h3>
+      <p>Try a different word, or browse a whole category instead.</p>
+      <a class="btn btn-primary" routerLink="/" [queryParams]="{ q: null, category: null, page: null }">
+        Browse all products
+      </a>
+    </div>
+  } @else {
+    <div class="grid">
+      @for (product of result().items; track product.id) {
+        <app-product-card [product]="product" (added)="addToCart($event)" />
+      }
+    </div>
+
+    @if (lastPage() > 1) {
+      <nav class="pager" aria-label="Pagination">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="result().page === 1"
+          (click)="goToPage(result().page - 1)"
+        >Previous</button>
+
+        <div class="page-numbers">
+          @for (n of pages(); track n) {
+            <button
+              type="button"
+              class="page-number"
+              [class.current]="n === result().page"
+              [attr.aria-current]="n === result().page ? 'page' : null"
+              (click)="goToPage(n)"
+            >{{ n }}</button>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="result().page === lastPage()"
+          (click)="goToPage(result().page + 1)"
+        >Next</button>
+      </nav>
+    }
+  }
+</div>

@@ -1,0 +1,31 @@
+{
+  "testids": [
+    "app-ready"
+  ],
+  "headings": [
+    "Checkout",
+    "Create your account",
+    "Customer reviews",
+    "Delivery",
+    "Everything for the home, the trail and the shelf.",
+    "Items",
+    "No orders here",
+    "No products matched",
+    "One account, every order.",
+    "Order not found",
+    "Order once, track it end to end.",
+    "Orders",
+    "Product not found",
+    "Products",
+    "Review your order",
+    "Service settings",
+    "Sign in",
+    "Summary",
+    "There is nothing to check out",
+    "Where should this go?",
+    "Your cart",
+    "Your cart is empty",
+    "Your orders"
+  ],
+  "source_dir": "/workspace/mockups/856b7da1-2c13-5f76-be0f-739641821d3f"
+}

@@ -1,0 +1,96 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Products</h1>
+      <p class="muted sub">{{ products().length }} live · {{ outOfStockCount() }} out of stock</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/admin/products/new">New product</a>
+  </div>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <a routerLink="/admin/products" class="active">Products</a>
+    <a routerLink="/admin/orders">Orders</a>
+    <a routerLink="/admin/settings">Settings</a>
+  </nav>
+
+  <div class="toolbar card">
+    <form class="search" (ngSubmit)="search()" role="search">
+      <label class="sr-only" for="admin-product-search">Search products</label>
+      <input
+        id="admin-product-search"
+        class="input"
+        type="search"
+        name="q"
+        placeholder="Search by product name"
+        [ngModel]="draftQuery()"
+        (ngModelChange)="draftQuery.set($event)"
+      />
+      <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+
+    <div class="stat">
+      <span class="label">Inventory value</span>
+      <strong>{{ inventoryValueCents() | money }}</strong>
+    </div>
+  </div>
+
+  @if (products().length === 0) {
+    <div class="card empty-state">
+      <h2>No products matched</h2>
+      <p>Try a different name, or clear the search.</p>
+      <a class="btn btn-secondary" routerLink="/admin/products" [queryParams]="{ q: null }">Clear search</a>
+    </div>
+  } @else {
+    <div class="card table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Category</th>
+            <th scope="col" class="right">Price</th>
+            <th scope="col" class="right">Stock</th>
+            <th scope="col">Rating</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr>
+              <th scope="row" class="cell-product">
+                <img [src]="product.imageUrl" [alt]="" width="44" height="44" loading="lazy" />
+                <a [routerLink]="['/products', product.id]">{{ product.name }}</a>
+              </th>
+              <td data-label="Category">{{ product.categoryName }}</td>
+              <td data-label="Price" class="right nums">{{ product.priceCents | money }}</td>
+              <td data-label="Stock" class="right nums">
+                <span class="stock" [class.zero]="product.stockQty === 0">{{ product.stockQty }}</span>
+              </td>
+              <td data-label="Rating">
+                <app-star-rating [rating]="product.avgRating" [count]="product.reviewCount" [compact]="true" />
+              </td>
+              <td class="actions">
+                <a class="btn btn-secondary btn-sm" [routerLink]="['/admin/products', product.id, 'edit']">Edit</a>
+                <button type="button" class="btn btn-ghost btn-sm danger" (click)="askDelete(product.id)">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (deleteTarget()) {
+    <app-modal heading="Remove this product?" (closed)="closeDelete()">
+      <p class="confirm-copy">
+        <strong>{{ deleteTarget()!.name }}</strong> will disappear from the catalog, search and this list.
+      </p>
+      <p class="confirm-copy muted">
+        Past orders keep the original name and the price paid, and existing reviews are left alone.
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDelete()">Keep it</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">Remove product</button>
+      </div>
+    </app-modal>
+  }
+</div>

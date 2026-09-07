@@ -1,0 +1,43 @@
+<form (ngSubmit)="submit()">
+  <p class="intro">How was <strong>{{ productName() }}</strong>?</p>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  }
+
+  <fieldset class="field">
+    <legend>Your rating</legend>
+    <div class="picker">
+      @for (star of stars; track star) {
+        <button
+          type="button"
+          class="star"
+          [class.on]="star <= rating()"
+          [attr.aria-label]="star + ' star' + (star === 1 ? '' : 's')"
+          [attr.aria-pressed]="star <= rating()"
+          (click)="setRating(star)"
+        >★</button>
+      }
+      <span class="picked">
+        @if (rating() > 0) { {{ rating() }} / 5 } @else { Tap a star }
+      </span>
+    </div>
+  </fieldset>
+
+  <label class="field">
+    <span>Your review</span>
+    <textarea
+      class="textarea"
+      name="body"
+      rows="4"
+      placeholder="What stood out — good or bad?"
+      [ngModel]="body()"
+      (ngModelChange)="body.set($event)"
+    ></textarea>
+  </label>
+
+  <div class="actions">
+    <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Cancel</button>
+    <button type="submit" class="btn btn-primary">Submit review</button>
+  </div>
+</form>

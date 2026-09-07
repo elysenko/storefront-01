@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Service settings</h1>
+      <p class="muted sub">
+        Runtime credentials for each backing service. Environment variables win; these fill the gaps.
+      </p>
+    </div>
+    @if (unconfiguredCount() > 0) {
+      <span class="warn-pill">{{ unconfiguredCount() }} unconfigured</span>
+    }
+  </div>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <a routerLink="/admin/products">Products</a>
+    <a routerLink="/admin/orders">Orders</a>
+    <a routerLink="/admin/settings" class="active">Settings</a>
+  </nav>
+
+  <div class="services">
+    @for (group of groups(); track group.service) {
+      <section class="service card">
+        <header class="service-head">
+          <div>
+            <h2>{{ group.label }}</h2>
+            <code class="service-key">{{ group.service }}</code>
+          </div>
+          @if (group.configured) {
+            <span class="badge ok">Configured</span>
+          } @else {
+            <span class="badge missing">Needs configuration</span>
+          }
+        </header>
+
+        <form (ngSubmit)="save(group)">
+          @for (setting of group.settings; track setting.key) {
+            <div class="setting">
+              <label class="field" [attr.for]="'set-' + setting.key">
+                <span>{{ setting.label }}</span>
+                <input
+                  class="input"
+                  [id]="'set-' + setting.key"
+                  [type]="setting.secret ? 'password' : 'text'"
+                  [name]="setting.key"
+                  [placeholder]="setting.configured ? 'Leave blank to keep current value' : 'Enter a value'"
+                  autocomplete="off"
+                  [ngModel]="draftFor(setting.key)"
+                  (ngModelChange)="setDraft(setting.key, $event)"
+                />
+              </label>
+
+              <div class="current">
+                <code class="env-key">{{ setting.key }}</code>
+                <span class="current-value" [class.unset]="!setting.configured">
+                  {{ displayValue(setting) }}
+                </span>
+              </div>
+            </div>
+          }
+
+          <div class="service-actions">
+            <button type="submit" class="btn btn-primary">Save {{ group.label }}</button>
+          </div>
+        </form>
+      </section>
+    }
+  </div>
+
+  <p class="footnote muted">
+    Secrets are shown masked and are never returned in full. A service reads its environment variable
+    first and only falls back to the value stored here.
+  </p>
+</div>

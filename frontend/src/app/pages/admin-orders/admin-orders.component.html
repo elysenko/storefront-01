@@ -1,0 +1,84 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Orders</h1>
+      <p class="muted sub">{{ allOrders().length }} orders across every shopper.</p>
+    </div>
+    <div class="stat">
+      <span class="label">Shown revenue</span>
+      <strong>{{ revenueCents() | money }}</strong>
+    </div>
+  </div>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <a routerLink="/admin/products">Products</a>
+    <a routerLink="/admin/orders" class="active">Orders</a>
+    <a routerLink="/admin/settings">Settings</a>
+  </nav>
+
+  <nav class="filters" aria-label="Filter by status">
+    <a class="filter" routerLink="/admin/orders" [queryParams]="{ status: null }" [class.active]="status() === null">
+      All <span class="n">{{ allOrders().length }}</span>
+    </a>
+    @for (s of statuses; track s) {
+      <a class="filter" routerLink="/admin/orders" [queryParams]="{ status: s }" [class.active]="status() === s">
+        {{ s }} <span class="n">{{ countFor(s) }}</span>
+      </a>
+    }
+  </nav>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  }
+
+  @if (orders().length === 0) {
+    <div class="card empty-state">
+      <h2>No {{ status() ?? '' }} orders</h2>
+      <p>Nothing matches this filter right now.</p>
+      <a class="btn btn-secondary" routerLink="/admin/orders">Show all orders</a>
+    </div>
+  } @else {
+    <div class="card table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Shopper</th>
+            <th scope="col">Placed</th>
+            <th scope="col" class="right">Items</th>
+            <th scope="col" class="right">Total</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.id) {
+            <tr>
+              <th scope="row">
+                <a class="order-id" [routerLink]="['/orders', order.id]">{{ order.id }}</a>
+              </th>
+              <td data-label="Shopper" class="email">{{ order.userEmail }}</td>
+              <td data-label="Placed">{{ order.createdAt | date: 'mediumDate' }}</td>
+              <td data-label="Items" class="right nums">{{ order.items.length }}</td>
+              <td data-label="Total" class="right nums strong">{{ order.totalCents | money }}</td>
+              <td data-label="Status"><app-status-badge [status]="order.status" /></td>
+              <td class="actions">
+                @if (nextFor(order); as target) {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="advance(order, target)">
+                    Mark {{ target }}
+                  </button>
+                } @else {
+                  <span class="done">Complete</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="rule muted">
+      Orders only move forward: placed → shipped → delivered. Anything else is refused and names the attempted change.
+    </p>
+  }
+</div>

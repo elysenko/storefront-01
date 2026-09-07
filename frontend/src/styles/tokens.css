@@ -1,0 +1,94 @@
+/**
+ * Storefront design tokens.
+ * Single source of truth for colour, type, spacing, radius and elevation.
+ * Component CSS must reference these via var(--token-name) and must never
+ * hardcode hex/rgb/named colours.
+ */
+:root {
+  /* ---- Brand & surfaces ---- */
+  --color-brand: #14213d;
+  --color-brand-soft: #223055;
+  --color-brand-contrast: #ffffff;
+
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f2f5;
+  --color-surface-sunken: #e9ecf1;
+
+  /* ---- Text ---- */
+  --color-ink: #10182a;
+  --color-ink-soft: #46506a;
+  --color-muted: #6b7488;
+  --color-inverse: #ffffff;
+
+  /* ---- Lines ---- */
+  --color-border: #dfe3ea;
+  --color-border-strong: #c3cad6;
+
+  /* ---- Accent (primary action) ---- */
+  --color-accent: #e07a1f;
+  --color-accent-strong: #b85f12;
+  --color-accent-soft: #fdf1e3;
+  --color-accent-contrast: #241202;
+
+  /* ---- Feedback ---- */
+  --color-success: #0f7a52;
+  --color-success-soft: #e4f4ec;
+  --color-warn: #a4620a;
+  --color-warn-soft: #fdf0dc;
+  --color-danger: #bd3124;
+  --color-danger-soft: #fbe9e7;
+  --color-info: #1d4ed8;
+  --color-info-soft: #e7edfd;
+  --color-star: #e8a33d;
+
+  /* ---- Focus ---- */
+  --color-focus: #2563eb;
+
+  /* ---- Typography ---- */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --font-size-3xl: 2.25rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---- Spacing ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* ---- Elevation ---- */
+  --shadow-sm: 0 1px 2px rgb(16 24 42 / 6%);
+  --shadow-md: 0 2px 8px rgb(16 24 42 / 8%);
+  --shadow-lg: 0 12px 32px rgb(16 24 42 / 16%);
+  --shadow-up: 0 -2px 8px rgb(16 24 42 / 6%);
+
+  /* ---- Overlay ---- */
+  --color-scrim: rgb(16 24 42 / 45%);
+
+  /* ---- Layout ---- */
+  --page-max: 1200px;
+  --header-height: 60px;
+  --bottom-nav-height: 60px;
+  --tap-target: 44px;
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+}

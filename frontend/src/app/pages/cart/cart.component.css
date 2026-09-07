@@ -1,0 +1,200 @@
+.sub { margin: 0; font-size: var(--font-size-sm); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.lines { padding: var(--space-2) var(--space-4); }
+
+.line {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.line:last-child { border-bottom: none; }
+
+.thumb {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+}
+
+.thumb img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.line-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+}
+
+.line-name:hover { color: var(--color-accent-strong); }
+
+.unit {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.cap {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-warn);
+}
+
+.line-qty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.stepper button {
+  min-width: var(--tap-target);
+  min-height: var(--tap-target);
+  background: var(--color-surface);
+  border: none;
+  color: var(--color-ink);
+  font-size: var(--font-size-lg);
+}
+
+.stepper button:hover { background: var(--color-surface-alt); }
+
+.qty-value {
+  min-width: 40px;
+  text-align: center;
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.remove {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: underline;
+}
+
+.remove:hover { color: var(--color-danger); }
+
+.line-total {
+  margin: 0;
+  min-width: 84px;
+  text-align: right;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- summary ---- */
+.summary {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-4));
+  padding: var(--space-5);
+}
+
+.summary h2 { font-size: var(--font-size-lg); margin-bottom: var(--space-4); }
+
+.totals { margin: 0 0 var(--space-4); }
+
+.totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  font-size: var(--font-size-base);
+}
+
+.totals dt { color: var(--color-ink-soft); }
+
+.totals dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: var(--font-weight-medium); }
+
+.free { color: var(--color-success); font-weight: var(--font-weight-semibold); }
+
+.grand {
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.nudge {
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-warn);
+}
+
+.empty-state h2 { margin-bottom: var(--space-2); }
+
+.empty-state .btn { margin-top: var(--space-3); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+
+  .summary { position: static; }
+}
+
+@media (max-width: 768px) {
+  .line {
+    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-areas:
+      "thumb body"
+      "thumb qty"
+      "total total";
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .thumb { grid-area: thumb; align-self: start; }
+
+  .line-body { grid-area: body; }
+
+  .line-qty {
+    grid-area: qty;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-3);
+  }
+
+  .line-total {
+    grid-area: total;
+    text-align: right;
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--color-border);
+  }
+
+  /* Primary action sits low on the screen for one-handed use. */
+  .summary { padding: var(--space-4); }
+
+  .line-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap-target);
+  }
+
+  .remove { min-height: var(--tap-target); }
+}

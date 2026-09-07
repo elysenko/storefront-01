@@ -1,0 +1,11 @@
+<div class="scrim" (click)="closed.emit()"></div>
+<div class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="heading()">
+  <header class="sheet-head">
+    <span class="grabber" aria-hidden="true"></span>
+    <h2>{{ heading() }}</h2>
+    <button type="button" class="close" (click)="closed.emit()" aria-label="Close dialog">✕</button>
+  </header>
+  <div class="sheet-body">
+    <ng-content />
+  </div>
+</div>

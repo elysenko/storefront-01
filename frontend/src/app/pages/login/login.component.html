@@ -1,0 +1,64 @@
+<div class="auth-page">
+  <div class="auth-card card">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-name">Storefront</span>
+    </a>
+
+    <h1>Sign in</h1>
+    <p class="sub">Shoppers and admins use the same sign-in.</p>
+
+    @if (error()) {
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
+    }
+
+    <form (ngSubmit)="submit()" novalidate>
+      <label class="field">
+        <span>Email address</span>
+        <input
+          class="input"
+          type="email"
+          name="email"
+          autocomplete="username"
+          inputmode="email"
+          placeholder="you@example.com"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+        />
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input
+          class="input"
+          type="password"
+          name="password"
+          autocomplete="current-password"
+          placeholder="Your password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+        />
+      </label>
+
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    </form>
+
+    @if (previewShortcut) {
+      <button type="button" class="preview-skip" (click)="skipLogin()">{{ previewShortcut }}</button>
+    }
+
+    <p class="switch">
+      New here? <a routerLink="/signup">Create an account</a>
+    </p>
+  </div>
+
+  <aside class="aside">
+    <h2>Order once, track it end to end.</h2>
+    <ul class="points">
+      <li><strong>Your cart persists.</strong> It is stored against your account, not this browser.</li>
+      <li><strong>Live stock checks.</strong> Checkout re-verifies availability before anything is placed.</li>
+      <li><strong>Review what you received.</strong> Ratings open up once an order is delivered.</li>
+    </ul>
+    <a class="browse" routerLink="/">Keep browsing without an account →</a>
+  </aside>
+</div>

@@ -1,0 +1,91 @@
+<div class="auth-page">
+  <div class="auth-card card">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-name">Storefront</span>
+    </a>
+
+    <h1>Create your account</h1>
+    <p class="sub">Takes a moment. Your cart carries over.</p>
+
+    @if (error()) {
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
+    }
+
+    <form (ngSubmit)="submit()" novalidate>
+      <label class="field">
+        <span>Full name</span>
+        <input
+          class="input"
+          type="text"
+          name="name"
+          autocomplete="name"
+          placeholder="Your name"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+        />
+      </label>
+
+      <label class="field">
+        <span>Email address</span>
+        <input
+          class="input"
+          type="email"
+          name="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="you@example.com"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+        />
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input
+          class="input"
+          type="password"
+          name="password"
+          autocomplete="new-password"
+          placeholder="At least 8 characters"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+        />
+        <span class="hint">Use at least 8 characters.</span>
+      </label>
+
+      <label class="field">
+        <span>Confirm password</span>
+        <input
+          class="input"
+          type="password"
+          name="confirm"
+          autocomplete="new-password"
+          placeholder="Re-enter your password"
+          [ngModel]="confirm()"
+          (ngModelChange)="confirm.set($event)"
+        />
+      </label>
+
+      <button type="submit" class="btn btn-primary btn-block">Create account</button>
+    </form>
+
+    @if (previewShortcut) {
+      <button type="button" class="preview-skip" (click)="skipSignup()">{{ previewShortcut }}</button>
+    }
+
+    <p class="switch">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+
+  <aside class="aside">
+    <h2>One account, every order.</h2>
+    <ul class="points">
+      <li><strong>Nothing to configure.</strong> New accounts start as shoppers straight away.</li>
+      <li><strong>Full history.</strong> Every order, from placed to delivered, in one list.</li>
+      <li><strong>Honest reviews.</strong> Only verified, delivered purchases can be rated.</li>
+    </ul>
+    <a class="browse" routerLink="/">Keep browsing without an account →</a>
+  </aside>
+</div>

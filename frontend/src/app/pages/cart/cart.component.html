@@ -1,0 +1,90 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Your cart</h1>
+      <p class="muted sub">
+        @if (cart.count() > 0) {
+          {{ cart.count() }} {{ cart.count() === 1 ? 'item' : 'items' }}, held against your account.
+        } @else {
+          Nothing here yet.
+        }
+      </p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/">Continue shopping</a>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  }
+
+  @if (cart.isEmpty()) {
+    <div class="card empty-state">
+      <h2>Your cart is empty</h2>
+      <p>Once you add something, it stays here — even after you sign out and back in.</p>
+      <a class="btn btn-primary" routerLink="/">Browse products</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <section class="lines card" aria-label="Cart items">
+        <ul>
+          @for (line of items(); track line.id) {
+            <li class="line">
+              <a class="thumb" [routerLink]="['/products', line.productId]">
+                <img [src]="line.imageUrl" [alt]="line.productName" width="120" height="120" loading="lazy" />
+              </a>
+
+              <div class="line-body">
+                <a class="line-name" [routerLink]="['/products', line.productId]">{{ line.productName }}</a>
+                <p class="unit">{{ line.unitPriceCents | money }} each</p>
+                @if (line.qty >= line.stockQty) {
+                  <p class="cap">Only {{ line.stockQty }} in stock</p>
+                }
+              </div>
+
+              <div class="line-qty">
+                <div class="stepper">
+                  <button type="button" (click)="step(line, -1)" [attr.aria-label]="'Decrease quantity of ' + line.productName">−</button>
+                  <span class="qty-value">{{ line.qty }}</span>
+                  <button type="button" (click)="step(line, 1)" [attr.aria-label]="'Increase quantity of ' + line.productName">+</button>
+                </div>
+                <button type="button" class="remove" (click)="remove(line)">Remove</button>
+              </div>
+
+              <p class="line-total">{{ line.lineTotalCents | money }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <aside class="summary card" aria-label="Order summary">
+        <h2>Summary</h2>
+
+        <dl class="totals">
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{{ totalCents() | money }}</dd>
+          </div>
+          <div>
+            <dt>Shipping</dt>
+            <dd>
+              @if (shippingCents() === 0) { <span class="free">Free</span> } @else { {{ shippingCents() | money }} }
+            </dd>
+          </div>
+          <div class="grand">
+            <dt>Total</dt>
+            <dd>{{ grandTotalCents() | money }}</dd>
+          </div>
+        </dl>
+
+        @if (remainingForFreeShipping() > 0) {
+          <p class="nudge">Add {{ remainingForFreeShipping() | money }} more for free delivery.</p>
+        }
+
+        <a class="btn btn-primary btn-block" routerLink="/checkout" [queryParams]="{ step: 'shipping' }">
+          Proceed to checkout
+        </a>
+        <p class="hint">Stock is re-checked when you place the order.</p>
+      </aside>
+    </div>
+  }
+</div>

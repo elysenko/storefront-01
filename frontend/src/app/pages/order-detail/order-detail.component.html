@@ -1,0 +1,89 @@
+<div class="page">
+  @if (!order()) {
+    <div class="card empty-state">
+      <h1>Order not found</h1>
+      <p>This order does not exist, or belongs to another account.</p>
+      <a class="btn btn-primary" routerLink="/orders">Back to your orders</a>
+    </div>
+  } @else {
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a routerLink="/orders">Your orders</a>
+      <span aria-hidden="true">/</span>
+      <span class="current">{{ order()!.id }}</span>
+    </nav>
+
+    <div class="page-head">
+      <div>
+        <h1>Order {{ order()!.id }}</h1>
+        <p class="muted sub">Placed {{ order()!.createdAt | date: 'medium' }}</p>
+      </div>
+      <app-status-badge [status]="order()!.status" />
+    </div>
+
+    <ol class="timeline" aria-label="Order progress">
+      @for (s of statuses; track s; let i = $index) {
+        <li class="node" [class.reached]="i <= reachedIndex()" [class.current]="i === reachedIndex()">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="node-name">{{ s }}</span>
+        </li>
+      }
+    </ol>
+
+    <div class="layout">
+      <section class="items card" aria-label="Items in this order">
+        <h2>Items</h2>
+        <p class="frozen-note muted">
+          Names and prices below are frozen as they were the day you ordered.
+        </p>
+
+        <ul>
+          @for (item of order()!.items; track item.id) {
+            <li class="item">
+              <img [src]="item.imageUrl" [alt]="item.productName" width="72" height="72" loading="lazy" />
+
+              <div class="item-body">
+                @if (stillListed(item)) {
+                  <a class="item-name" [routerLink]="['/products', item.productId]">{{ item.productName }}</a>
+                } @else {
+                  <span class="item-name">{{ item.productName }}</span>
+                  <span class="gone">No longer sold</span>
+                }
+                <p class="item-unit">{{ item.unitPriceCents | money }} × {{ item.qty }}</p>
+
+                @if (canReview(item)) {
+                  <a
+                    class="review-link"
+                    [routerLink]="['/products', item.productId]"
+                    [queryParams]="{ tab: 'reviews', modal: 'review' }"
+                  >Write a review</a>
+                }
+              </div>
+
+              <span class="item-total">{{ item.unitPriceCents * item.qty | money }}</span>
+            </li>
+          }
+        </ul>
+
+        <div class="order-total">
+          <span>Order total</span>
+          <strong>{{ order()!.totalCents | money }}</strong>
+        </div>
+      </section>
+
+      <aside class="ship card" aria-label="Delivery details">
+        <h2>Delivery</h2>
+        <span class="label">Recipient</span>
+        <p class="value">{{ order()!.shipName }}</p>
+        <span class="label">Address</span>
+        <p class="value address">{{ order()!.shipAddress }}</p>
+
+        <div class="divider"></div>
+
+        <span class="label">Items</span>
+        <p class="value">{{ order()!.items.length }} {{ order()!.items.length === 1 ? 'line' : 'lines' }}</p>
+
+        <a class="btn btn-secondary btn-block" routerLink="/orders">Back to your orders</a>
+      </aside>
+    </div>
+  }
+</div>

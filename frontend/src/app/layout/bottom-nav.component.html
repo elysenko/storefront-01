@@ -1,0 +1,38 @@
+@if (!hidden()) {
+  <nav class="tabs" aria-label="Primary">
+    <a class="tab" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9.5 12 3l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z" /><path d="M9.5 21v-6.5h5V21" />
+      </svg>
+      <span class="label">Shop</span>
+    </a>
+
+    <a class="tab" routerLink="/orders" routerLinkActive="active">
+      <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z" /><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" />
+      </svg>
+      <span class="label">Orders</span>
+    </a>
+
+    <a class="tab" routerLink="/cart" routerLinkActive="active">
+      <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 4h2.2l2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.5a1.6 1.6 0 0 0 1.6-1.3L20.5 8H6.2" />
+        <circle cx="9.5" cy="20" r="1.4" /><circle cx="17.5" cy="20" r="1.4" />
+      </svg>
+      @if (cart.count() > 0) {
+        <span class="pip">{{ cart.count() }}</span>
+      }
+      <span class="label">Cart</span>
+    </a>
+
+    @if (isAdmin()) {
+      <a class="tab" routerLink="/admin/orders" routerLinkActive="active">
+        <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" /><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" /><circle cx="8" cy="17" r="2" fill="currentColor" stroke="none" />
+      </svg>
+        <span class="label">Admin</span>
+      </a>
+    }
+  </nav>
+}

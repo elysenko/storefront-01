@@ -1,0 +1,92 @@
+<div class="page narrow">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a routerLink="/admin/products">Products</a>
+    <span aria-hidden="true">/</span>
+    <span class="current">{{ heading() }}</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1>{{ heading() }}</h1>
+      <p class="muted sub">
+        @if (editing) { Editing {{ existing?.name }} } @else { Added to the catalog immediately on save. }
+      </p>
+    </div>
+  </div>
+
+  @if (editing && !existing) {
+    <div class="card empty-state">
+      <h2>Product not found</h2>
+      <p>It may have already been removed.</p>
+      <a class="btn btn-primary" routerLink="/admin/products">Back to products</a>
+    </div>
+  } @else {
+    <form class="card form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <label class="field">
+        <span>Name</span>
+        <input class="input" type="text" formControlName="name" placeholder="e.g. Wireless Headphones" />
+        @if (invalid('name')) {
+          <span class="error-text">Enter a product name of at least 3 characters.</span>
+        }
+      </label>
+
+      <div class="row">
+        <label class="field">
+          <span>Category</span>
+          <select class="select" formControlName="categoryId">
+            <option value="">Choose a category</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+          @if (invalid('categoryId')) {
+            <span class="error-text">Pick a category.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span>Price</span>
+          <input class="input" type="text" inputmode="decimal" formControlName="price" placeholder="129.99" />
+          <span class="hint">Stored as integer cents — no rounding drift.</span>
+          @if (invalid('price')) {
+            <span class="error-text">Enter a price like 129.99.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span>Stock quantity</span>
+          <input class="input" type="number" inputmode="numeric" min="0" formControlName="stockQty" />
+          @if (invalid('stockQty')) {
+            <span class="error-text">Stock cannot be negative.</span>
+          }
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Description</span>
+        <textarea
+          class="textarea"
+          rows="5"
+          formControlName="description"
+          placeholder="What is it, who is it for, and what makes it worth the price?"
+        ></textarea>
+        @if (invalid('description')) {
+          <span class="error-text">Write at least 20 characters so shoppers know what they're buying.</span>
+        }
+      </label>
+
+      <label class="field">
+        <span>Image URL <span class="optional">optional</span></span>
+        <input class="input" type="text" formControlName="imageUrl" placeholder="https://…" />
+        <span class="hint">Leave blank and we'll generate placeholder artwork from the name.</span>
+      </label>
+
+      <div class="form-actions">
+        <a class="btn btn-secondary" routerLink="/admin/products">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          {{ editing ? 'Save changes' : 'Create product' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

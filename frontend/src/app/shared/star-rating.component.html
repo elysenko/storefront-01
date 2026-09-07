@@ -1,0 +1,15 @@
+<span class="rating" [class.compact]="compact()" [attr.aria-label]="label()" role="img">
+  <span class="stars" aria-hidden="true">
+    <span class="track">★★★★★</span>
+    <span class="fill" [style.width.%]="percent()">★★★★★</span>
+  </span>
+  @if (count() !== null) {
+    <span class="count" aria-hidden="true">
+      @if (count()! > 0) {
+        {{ rating().toFixed(1) }} <span class="reviews">({{ count() }})</span>
+      } @else {
+        <span class="reviews">No reviews</span>
+      }
+    </span>
+  }
+</span>

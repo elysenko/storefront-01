@@ -1,0 +1,110 @@
+<div class="page">
+  <div class="page-head">
+    <h1>Checkout</h1>
+    <a class="btn btn-ghost" routerLink="/cart">Back to cart</a>
+  </div>
+
+  <ol class="steps" aria-label="Checkout progress">
+    <li class="step" [class.active]="step() === 'shipping'" [class.done]="step() === 'review'">
+      <span class="num">1</span><span class="name">Shipping</span>
+    </li>
+    <li class="step" [class.active]="step() === 'review'">
+      <span class="num">2</span><span class="name">Review &amp; place</span>
+    </li>
+  </ol>
+
+  @if (cart.isEmpty()) {
+    <div class="card empty-state">
+      <h2>There is nothing to check out</h2>
+      <p>Add something to your cart first.</p>
+      <a class="btn btn-primary" routerLink="/">Browse products</a>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
+    }
+
+    <div class="layout">
+      <section class="panel card">
+        @if (step() === 'shipping') {
+          <h2>Where should this go?</h2>
+
+          <form (ngSubmit)="continueToReview()" novalidate>
+            <label class="field">
+              <span>Recipient name</span>
+              <input
+                class="input"
+                type="text"
+                name="shipName"
+                autocomplete="name"
+                placeholder="Who is receiving this?"
+                [ngModel]="shipName()"
+                (ngModelChange)="shipName.set($event)"
+              />
+            </label>
+
+            <label class="field">
+              <span>Delivery address</span>
+              <textarea
+                class="textarea"
+                name="shipAddress"
+                rows="4"
+                placeholder="Street, city, postcode, country"
+                [ngModel]="shipAddress()"
+                (ngModelChange)="shipAddress.set($event)"
+              ></textarea>
+              <span class="hint">We deliver Monday to Saturday. No PO boxes.</span>
+            </label>
+
+            <button type="submit" class="btn btn-primary btn-block">Continue to review</button>
+          </form>
+        } @else {
+          <h2>Review your order</h2>
+
+          <div class="ship-summary">
+            <div>
+              <span class="label">Delivering to</span>
+              <p class="value">{{ shipName() || 'No name entered' }}</p>
+              <p class="value address">{{ shipAddress() || 'No address entered' }}</p>
+            </div>
+            <button type="button" class="btn btn-ghost" (click)="goToStep('shipping')">Edit</button>
+          </div>
+
+          <ul class="review-lines">
+            @for (line of cart.items(); track line.id) {
+              <li>
+                <img [src]="line.imageUrl" [alt]="line.productName" width="56" height="56" loading="lazy" />
+                <span class="rl-name">{{ line.productName }}</span>
+                <span class="rl-qty">× {{ line.qty }}</span>
+                <span class="rl-total">{{ line.lineTotalCents | money }}</span>
+              </li>
+            }
+          </ul>
+
+          <button
+            type="button"
+            class="btn btn-primary btn-block place"
+            [disabled]="placing()"
+            (click)="placeOrder()"
+          >
+            {{ placing() ? 'Placing order…' : 'Place order · ' + (grandTotalCents() | money) }}
+          </button>
+          <p class="hint">Stock is re-verified now. If anything ran short we'll name it rather than ship you short.</p>
+        }
+      </section>
+
+      <aside class="summary card" aria-label="Order summary">
+        <h2>Summary</h2>
+        <dl class="totals">
+          <div><dt>Subtotal</dt><dd>{{ totalCents() | money }}</dd></div>
+          <div>
+            <dt>Shipping</dt>
+            <dd>@if (shippingCents() === 0) { <span class="free">Free</span> } @else { {{ shippingCents() | money }} }</dd>
+          </div>
+          <div class="grand"><dt>Total</dt><dd>{{ grandTotalCents() | money }}</dd></div>
+        </dl>
+        <p class="muted items-note">{{ cart.count() }} {{ cart.count() === 1 ? 'item' : 'items' }}</p>
+      </aside>
+    </div>
+  }
+</div>

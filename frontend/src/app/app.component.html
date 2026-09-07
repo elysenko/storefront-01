@@ -1,0 +1,24 @@
+<!--
+  data-testid="app-ready" is the universal readiness landmark: it enters the DOM
+  only after Angular bootstraps this root component, so the render gate can wait
+  on it to confirm the SPA hydrated (not a blank shell / 404 / failed bundle).
+  Keep it here.
+-->
+<div class="shell" data-testid="app-ready">
+  <app-header />
+
+  <main class="shell-main">
+    <router-outlet />
+  </main>
+
+  <app-footer />
+  <app-bottom-nav />
+
+  <div class="toasts" aria-live="polite">
+    @for (item of toast.toasts(); track item.id) {
+      <button type="button" class="toast" [class.error]="item.tone === 'error'" (click)="toast.dismiss(item.id)">
+        {{ item.message }}
+      </button>
+    }
+  </div>
+</div>

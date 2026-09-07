@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Your orders</h1>
+      <p class="muted sub">{{ totalCount() }} {{ totalCount() === 1 ? 'order' : 'orders' }} so far.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/">Continue shopping</a>
+  </div>
+
+  <nav class="filters" aria-label="Filter by status">
+    <a class="filter" routerLink="/orders" [queryParams]="{ status: null }" [class.active]="status() === null">
+      All <span class="n">{{ totalCount() }}</span>
+    </a>
+    @for (s of statuses; track s) {
+      <a class="filter" routerLink="/orders" [queryParams]="{ status: s }" [class.active]="status() === s">
+        {{ s }} <span class="n">{{ countFor(s) }}</span>
+      </a>
+    }
+  </nav>
+
+  @if (orders().length === 0) {
+    <div class="card empty-state">
+      <h2>No orders here</h2>
+      @if (status()) {
+        <p>You have no {{ status() }} orders right now.</p>
+        <a class="btn btn-secondary" routerLink="/orders">Show all orders</a>
+      } @else {
+        <p>When you place an order it will appear here, and you can follow it to your door.</p>
+        <a class="btn btn-primary" routerLink="/">Browse products</a>
+      }
+    </div>
+  } @else {
+    <ul class="order-list">
+      @for (order of orders(); track order.id) {
+        <li class="order card">
+          <div class="order-head">
+            <div class="meta">
+              <span class="label">Order</span>
+              <a class="order-id" [routerLink]="['/orders', order.id]">{{ order.id }}</a>
+            </div>
+            <div class="meta">
+              <span class="label">Placed</span>
+              <span class="value">{{ order.createdAt | date: 'mediumDate' }}</span>
+            </div>
+            <div class="meta">
+              <span class="label">Total</span>
+              <span class="value strong">{{ order.totalCents | money }}</span>
+            </div>
+            <app-status-badge [status]="order.status" />
+          </div>
+
+          <ul class="thumbs">
+            @for (item of order.items; track item.id) {
+              <li>
+                <img [src]="item.imageUrl" [alt]="item.productName" width="64" height="64" loading="lazy" />
+                <span class="thumb-name">{{ item.productName }}</span>
+                <span class="thumb-qty">× {{ item.qty }}</span>
+              </li>
+            }
+          </ul>
+
+          <div class="order-foot">
+            <a class="btn btn-secondary" [routerLink]="['/orders', order.id]">View order</a>
+            @if (order.status === 'delivered') {
+              <span class="reviewable">Delivered — you can review these items</span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

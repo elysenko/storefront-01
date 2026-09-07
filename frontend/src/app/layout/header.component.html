@@ -1,0 +1,134 @@
+<header class="site-header">
+  <div class="bar">
+    <button
+      type="button"
+      class="icon-btn menu-btn"
+      (click)="toggleDrawer()"
+      [attr.aria-expanded]="drawerOpen()"
+      aria-label="Open menu"
+    >
+      <span class="bars" aria-hidden="true"></span>
+    </button>
+
+    <a class="brand" routerLink="/" (click)="closeMenus()">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-name">Storefront</span>
+    </a>
+
+    <form class="search" (ngSubmit)="search()" role="search">
+      <label class="sr-only" for="header-search">Search products</label>
+      <input
+        id="header-search"
+        class="input search-input"
+        type="search"
+        name="q"
+        placeholder="Search products"
+        autocomplete="off"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+      />
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" />
+        </svg>
+      </button>
+    </form>
+
+    <nav class="actions" aria-label="Account and cart">
+      <div class="account">
+        <button type="button" class="icon-btn account-btn" (click)="toggleAccount()" [attr.aria-expanded]="accountOpen()">
+          <span class="account-label">
+            @if (user()) {
+              <span class="who">{{ user()!.email }}</span>
+              <span class="role">{{ user()!.role }}</span>
+            } @else {
+              <span class="who">Sign in</span>
+              <span class="role">Account</span>
+            }
+          </span>
+        </button>
+
+        @if (accountOpen()) {
+          <div class="dropdown">
+            @if (user()) {
+              <a class="drop-item" routerLink="/orders" (click)="closeMenus()">Your orders</a>
+              @if (isAdmin()) {
+                <a class="drop-item" routerLink="/admin/products" (click)="closeMenus()">Manage products</a>
+                <a class="drop-item" routerLink="/admin/orders" (click)="closeMenus()">All orders</a>
+                <a class="drop-item" routerLink="/admin/settings" (click)="closeMenus()">Service settings</a>
+              }
+              <button type="button" class="drop-item" (click)="logout()">Sign out</button>
+            } @else {
+              <a class="drop-item" routerLink="/login" (click)="closeMenus()">Sign in</a>
+              <a class="drop-item" routerLink="/signup" (click)="closeMenus()">Create an account</a>
+            }
+
+            @if (previewSwitch) {
+              <div class="drop-divider"></div>
+              <button type="button" class="drop-item subtle" (click)="previewAs('shopper')">{{ previewSwitch.shopper }}</button>
+              <button type="button" class="drop-item subtle" (click)="previewAs('admin')">{{ previewSwitch.admin }}</button>
+            }
+          </div>
+        }
+      </div>
+
+      <a class="icon-btn cart-btn" routerLink="/cart" (click)="closeMenus()" aria-label="Cart">
+        <svg class="cart-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 4h2.2l2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.5a1.6 1.6 0 0 0 1.6-1.3L20.5 8H6.2" />
+          <circle cx="9.5" cy="20" r="1.4" /><circle cx="17.5" cy="20" r="1.4" />
+        </svg>
+        <span class="cart-count" [class.zero]="cartCount() === 0">{{ cartCount() }}</span>
+        <span class="cart-word">Cart</span>
+      </a>
+    </nav>
+  </div>
+
+  @if (!onAuthScreen()) {
+    <nav class="categories" aria-label="Product categories">
+      <a
+        class="chip"
+        routerLink="/"
+        [queryParams]="{ category: null, page: null }"
+        queryParamsHandling="merge"
+        [class.active]="activeCategory() === null"
+      >All products</a>
+      @for (category of categories(); track category.id) {
+        <a
+          class="chip"
+          routerLink="/"
+          [queryParams]="{ category: category.id, page: null }"
+          queryParamsHandling="merge"
+          [class.active]="activeCategory() === category.id"
+        >{{ category.name }}</a>
+      }
+    </nav>
+  }
+</header>
+
+@if (drawerOpen()) {
+  <div class="drawer-scrim" (click)="closeMenus()"></div>
+  <aside class="drawer" aria-label="Menu">
+    <div class="drawer-head">
+      <span class="drawer-title">Browse</span>
+      <button type="button" class="icon-btn" (click)="closeMenus()" aria-label="Close menu">✕</button>
+    </div>
+
+    <a class="drawer-item" routerLink="/" [queryParams]="{ category: null, q: null, page: null }" (click)="closeMenus()">All products</a>
+    @for (category of categories(); track category.id) {
+      <a class="drawer-item" routerLink="/" [queryParams]="{ category: category.id, page: null }" (click)="closeMenus()">{{ category.name }}</a>
+    }
+
+    <div class="drawer-divider"></div>
+
+    <a class="drawer-item" routerLink="/orders" routerLinkActive="active" (click)="closeMenus()">Your orders</a>
+    <a class="drawer-item" routerLink="/cart" routerLinkActive="active" (click)="closeMenus()">Cart ({{ cartCount() }})</a>
+
+    @if (isAdmin()) {
+      <div class="drawer-divider"></div>
+      <span class="drawer-label">Admin</span>
+      <a class="drawer-item" routerLink="/admin/products" (click)="closeMenus()">Products</a>
+      <a class="drawer-item" routerLink="/admin/orders" (click)="closeMenus()">Orders</a>
+      <a class="drawer-item" routerLink="/admin/settings" (click)="closeMenus()">Settings</a>
+    }
+  </aside>
+}
