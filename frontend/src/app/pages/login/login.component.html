@@ -43,10 +43,6 @@
       <button type="submit" class="btn btn-primary btn-block">Sign in</button>
     </form>
 
-    @if (previewShortcut) {
-      <button type="button" class="preview-skip" (click)="skipLogin()">{{ previewShortcut }}</button>
-    }
-
     <p class="switch">
       New here? <a routerLink="/signup">Create an account</a>
     </p>

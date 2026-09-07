@@ -31,11 +31,6 @@ export class HeaderComponent {
   readonly drawerOpen = signal(false);
   readonly accountOpen = signal(false);
 
-  /** Preview-only role switcher, so a reviewer can see both role's navigation. */
-  readonly previewSwitch = COLOSSUS_PREVIEW
-    ? { shopper: 'Preview as shopper', admin: 'Preview as admin' }
-    : null;
-
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -82,10 +77,5 @@ export class HeaderComponent {
   logout(): void {
     this.closeMenus();
     this.auth.logout();
-  }
-
-  previewAs(role: 'shopper' | 'admin'): void {
-    this.closeMenus();
-    this.auth.previewSignIn(role);
   }
 }

@@ -1,75 +1,53 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import type { Role, User } from './models';
-import { DEMO_ADMIN, DEMO_SHOPPER } from './mock-data';
-import { readValidated, removeKeys, writeJson, writeRaw } from './storage';
-
-const USER_KEY = 'user';
-const TOKEN_KEY = 'token';
-
-/** Untrusted-input validator for anything restored from browser storage. */
-function isUser(value: unknown): value is User {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const candidate = value as Partial<User>;
-  return (
-    typeof candidate.id === 'string' &&
-    typeof candidate.email === 'string' &&
-    (candidate.role === 'admin' || candidate.role === 'shopper')
-  );
-}
+import { HttpErrorResponse } from '@angular/common/http';
+import { ApiService, apiErrorMessage } from './api.service';
+import { endSession, refreshSessionUser, sessionToken, sessionUser, startSession } from './session';
 
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+$/;
 
+/**
+ * Live JWT auth against POST /api/auth/{login,signup} and GET /api/auth/me.
+ *
+ * The cached profile is restored from namespaced storage synchronously (so a
+ * cold load of a guarded deep link resolves without a flash of /login) and then
+ * re-validated against the server; a rejected token is cleared by the HTTP
+ * interceptor.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly router = inject(Router);
+  private readonly api = inject(ApiService);
 
-  readonly user = signal<User | null>(null);
+  readonly user = sessionUser;
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly isAdmin = computed(() => this.user()?.role === 'admin');
 
   constructor() {
-    this.restore();
+    void this.revalidate();
   }
 
   /**
-   * Restore defensively: a malformed or stale value clears its keys and falls
-   * through to a usable screen rather than throwing and blanking the page.
+   * Confirms the stored token still works and refreshes the cached role, so a
+   * server-side role change or a revoked account is picked up on next load.
+   * Failures are non-fatal: the interceptor clears an invalid session.
    */
-  private restore(): void {
-    let restored: User | null = null;
-    try {
-      restored = readValidated<User>(USER_KEY, isUser);
-    } catch {
-      removeKeys(USER_KEY, TOKEN_KEY);
-      restored = null;
-    }
-
-    if (restored) {
-      this.user.set(restored);
+  private async revalidate(): Promise<void> {
+    if (!sessionToken()) {
       return;
     }
-
-    if (COLOSSUS_PREVIEW) {
-      // Static preview has no auth server, so a cold load of an authenticated
-      // route must still render that screen rather than bounce to /login.
-      this.setSession(DEMO_SHOPPER);
+    try {
+      refreshSessionUser(await this.api.me());
+    } catch {
+      /* interceptor already cleared the session on a 401 */
     }
-  }
-
-  private setSession(user: User): void {
-    this.user.set(user);
-    writeJson(USER_KEY, user);
-    writeRaw(TOKEN_KEY, `preview.${user.id}.${user.role}`);
   }
 
   /**
    * Returns an error message, or null on success (in which case the caller has
    * already been navigated onward).
    */
-  login(email: string, password: string, redirect?: string | null): string | null {
+  async login(email: string, password: string, redirect?: string | null): Promise<string | null> {
     const trimmed = email.trim();
 
     if (!trimmed || !password) {
@@ -79,24 +57,21 @@ export class AuthService {
       return 'Enter a valid email address.';
     }
 
-    if (COLOSSUS_PREVIEW) {
-      // Resolved locally and synchronously — a network call would fail on the
-      // static preview host and strand the reviewer on this screen.
-      const role: Role = trimmed.toLowerCase().startsWith('admin') ? 'admin' : 'shopper';
-      this.setSession({
-        id: role === 'admin' ? DEMO_ADMIN.id : DEMO_SHOPPER.id,
-        email: trimmed,
-        role,
-      });
-      void this.router.navigateByUrl(redirect || '/');
+    try {
+      const session = await this.api.login(trimmed, password);
+      startSession(session.user, session.token);
+      void this.router.navigateByUrl(this.safeRedirect(redirect, session.user.role === 'admin'));
       return null;
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 401) {
+        return 'Email address or password is incorrect.';
+      }
+      return apiErrorMessage(error, 'Could not sign you in. Please try again.');
     }
-
-    // Production path: POST /api/auth/login, then setSession + navigate.
-    return null;
   }
 
-  signup(email: string, password: string, confirm: string): string | null {
+  /** Signup always yields a shopper; the role is never client-settable. */
+  async signup(email: string, password: string, confirm: string): Promise<string | null> {
     const trimmed = email.trim();
 
     if (!trimmed || !password || !confirm) {
@@ -112,53 +87,33 @@ export class AuthService {
       return 'Those passwords do not match.';
     }
 
-    if (COLOSSUS_PREVIEW) {
-      // Signup always yields a shopper; the role is never client-settable.
-      this.setSession({ id: DEMO_SHOPPER.id, email: trimmed, role: 'shopper' });
+    try {
+      const session = await this.api.signup(trimmed, password);
+      startSession(session.user, session.token);
       void this.router.navigateByUrl('/');
       return null;
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 409) {
+        return 'An account with that email address already exists.';
+      }
+      return apiErrorMessage(error, 'Could not create your account. Please try again.');
     }
-
-    // Production path: POST /api/auth/signup.
-    return null;
   }
 
+  /** The JWT is stateless, so signing out is simply discarding it. */
   logout(): void {
-    this.user.set(null);
-    removeKeys(USER_KEY, TOKEN_KEY);
+    endSession();
     void this.router.navigateByUrl('/login');
   }
 
   /**
-   * Preview-only shortcut. Seeds the signed-in state directly and lands on the
-   * authenticated home, so the reviewer (and the screenshot capture pass) can
-   * reach every screen behind auth without any credentials.
+   * `?redirect=` is attacker-controllable, so only same-origin paths are
+   * honoured; anything else falls back to the role's natural landing page.
    */
-  previewSignIn(role: Role = 'shopper'): void {
-    if (!COLOSSUS_PREVIEW) {
-      return;
+  private safeRedirect(redirect: string | null | undefined, isAdmin: boolean): string {
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      return redirect;
     }
-    this.setSession(role === 'admin' ? DEMO_ADMIN : DEMO_SHOPPER);
-    void this.router.navigateByUrl(role === 'admin' ? '/admin/orders' : '/');
-  }
-
-  /** Preview-only: guarantees an admin session so admin routes are deep-linkable. */
-  previewEnsureAdmin(): void {
-    if (!COLOSSUS_PREVIEW) {
-      return;
-    }
-    if (this.user()?.role !== 'admin') {
-      this.setSession(DEMO_ADMIN);
-    }
-  }
-
-  /** Preview-only: guarantees some session so authed routes are deep-linkable. */
-  previewEnsureSession(): void {
-    if (!COLOSSUS_PREVIEW) {
-      return;
-    }
-    if (!this.user()) {
-      this.setSession(DEMO_SHOPPER);
-    }
+    return isAdmin ? '/admin/orders' : '/';
   }
 }

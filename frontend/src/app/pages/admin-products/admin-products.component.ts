@@ -52,6 +52,9 @@ export class AdminProductsComponent {
     this.products().reduce((sum, p) => sum + p.priceCents * p.stockQty, 0),
   );
 
+  readonly loading = this.catalog.loading;
+  readonly loadError = this.catalog.error;
+
   constructor() {
     effect(() => this.draftQuery.set(this.query()));
   }
@@ -80,12 +83,18 @@ export class AdminProductsComponent {
     });
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const target = this.deleteTarget();
     if (!target) {
       return;
     }
-    this.catalog.softDelete(target.id);
+    // DELETE /api/admin/products/:id is a soft delete: the row keeps its
+    // historical OrderItem and Review relations.
+    const error = await this.catalog.softDelete(target.id);
+    if (error) {
+      this.toast.show(error, 'error');
+      return;
+    }
     this.toast.show(`${target.name} removed from the catalog. Past orders are untouched.`);
     this.closeDelete();
   }

@@ -22,17 +22,19 @@ export class SignupComponent {
   readonly confirm = signal('');
   readonly error = signal<string | null>(null);
 
-  readonly previewShortcut = COLOSSUS_PREVIEW ? 'Skip signup — Demo Mode' : null;
+  readonly submitting = signal(false);
 
-  submit(): void {
+  /** POST /api/auth/signup; a duplicate email comes back as a 409, shown inline. */
+  async submit(): Promise<void> {
+    if (this.submitting()) {
+      return;
+    }
     if (!this.name().trim()) {
       this.error.set('Tell us your name so we can address your orders.');
       return;
     }
-    this.error.set(this.auth.signup(this.email(), this.password(), this.confirm()));
-  }
-
-  skipSignup(): void {
-    this.auth.previewSignIn('shopper');
+    this.submitting.set(true);
+    this.error.set(await this.auth.signup(this.email(), this.password(), this.confirm()));
+    this.submitting.set(false);
   }
 }

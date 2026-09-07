@@ -1,24 +1,50 @@
 import { Injectable, inject, signal } from '@angular/core';
-import type { Order, OrderItem, OrderStatus } from './models';
-import { nextStatus } from './models';
-import { MOCK_ORDERS } from './mock-data';
+import type { Order, OrderStatus } from './models';
+import { ApiService, apiErrorMessage } from './api.service';
 import { CartStore } from './cart.store';
 import { CatalogStore } from './catalog.store';
-import { hydrateAndPersist } from './storage';
 
+/**
+ * Orders, backed by GET /api/orders (own), GET /api/admin/orders (all),
+ * POST /api/orders (checkout) and PATCH /api/admin/orders/:id/status.
+ *
+ * Ordering, ownership scoping and the status progression are all decided by the
+ * API; this store holds whichever slice the current screen asked for.
+ */
 @Injectable({ providedIn: 'root' })
 export class OrdersStore {
+  private readonly api = inject(ApiService);
   private readonly cart = inject(CartStore);
   private readonly catalog = inject(CatalogStore);
 
-  /** Backed by GET /api/orders (own) and GET /api/admin/orders (all). */
-  readonly orders = signal<Order[]>([...MOCK_ORDERS]);
+  readonly orders = signal<Order[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
 
-  private sequence = 1011;
+  /** GET /api/orders — the signed-in shopper's own orders, newest first. */
+  async loadMine(): Promise<void> {
+    await this.fetch(() => this.api.listOrders(), 'Your orders could not be loaded right now.');
+  }
 
-  constructor() {
-    if (COLOSSUS_PREVIEW) {
-      hydrateAndPersist('orders', this.orders);
+  /** GET /api/admin/orders — every order joined to the shopper's email. */
+  async loadAll(): Promise<void> {
+    await this.fetch(() => this.api.adminListOrders(), 'Orders could not be loaded right now.');
+  }
+
+  /** GET /api/orders/:id — own, or any when the caller is an admin. */
+  async loadOne(id: string): Promise<void> {
+    if (!id) {
+      return;
+    }
+    this.loading.set(true);
+    try {
+      this.merge(await this.api.getOrder(id));
+      this.error.set(null);
+    } catch (error) {
+      this.orders.update((list) => list.filter((o) => o.id !== id));
+      this.error.set(apiErrorMessage(error, 'That order could not be loaded.'));
+    } finally {
+      this.loading.set(false);
     }
   }
 
@@ -34,69 +60,50 @@ export class OrdersStore {
   }
 
   /**
-   * Places the order: re-validates stock, freezes productName/unitPriceCents on
-   * each line, decrements stock and empties the cart — the API does all of this
-   * inside one transaction. Returns the new order, or an error message.
+   * POST /api/orders. Stock re-validation, order creation, the stock decrement
+   * and emptying the cart all happen inside one server-side transaction, so a
+   * line that ran short comes back as a 400 naming the product.
    */
-  placeOrder(
-    userId: string,
-    userEmail: string,
-    shipName: string,
-    shipAddress: string,
-  ): { order: Order } | { error: string } {
-    const lines = this.cart.items();
-    if (lines.length === 0) {
-      return { error: 'Your cart is empty.' };
+  async placeOrder(shipName: string, shipAddress: string): Promise<{ order: Order } | { error: string }> {
+    try {
+      const order = await this.api.checkout(shipName, shipAddress);
+      this.merge(order);
+      this.cart.clear();
+      // Stock changed server-side; re-read rather than adjusting locally.
+      void this.catalog.load();
+      return { order };
+    } catch (error) {
+      void this.cart.load();
+      return { error: apiErrorMessage(error, 'Your order could not be placed.') };
     }
-
-    const shortfall = this.cart.revalidateStock();
-    if (shortfall) {
-      return { error: shortfall };
-    }
-
-    this.sequence += 1;
-    const orderId = `o${this.sequence}`;
-    const items: OrderItem[] = lines.map((line, index) => ({
-      id: `oi-${orderId}-${index}`,
-      orderId,
-      productId: line.productId,
-      productName: line.productName,
-      imageUrl: line.imageUrl,
-      unitPriceCents: line.unitPriceCents,
-      qty: line.qty,
-    }));
-
-    const order: Order = {
-      id: orderId,
-      userId,
-      userEmail,
-      status: 'placed',
-      totalCents: this.cart.totalCents(),
-      shipName,
-      shipAddress,
-      createdAt: new Date().toISOString(),
-      items,
-    };
-
-    this.orders.update((list) => [order, ...list]);
-    for (const line of lines) {
-      this.catalog.decrementStock(line.productId, line.qty);
-    }
-    this.cart.clear();
-
-    return { order };
   }
 
-  /** Only placed -> shipped -> delivered. Anything else names the attempted move. */
-  advanceStatus(orderId: string, target: OrderStatus): string | null {
-    const order = this.byId(orderId);
-    if (!order) {
-      return 'That order no longer exists.';
+  /** PATCH /api/admin/orders/:id/status — placed -> shipped -> delivered only. */
+  async advanceStatus(orderId: string, target: OrderStatus): Promise<string | null> {
+    try {
+      const result = await this.api.adminAdvanceOrder(orderId, target);
+      this.orders.update((list) =>
+        list.map((o) => (o.id === orderId ? { ...o, status: result.status } : o)),
+      );
+      return null;
+    } catch (error) {
+      return apiErrorMessage(error, 'That status change was rejected.');
     }
-    if (nextStatus(order.status) !== target) {
-      return `Cannot move order ${orderId} from ${order.status} to ${target}.`;
+  }
+
+  private async fetch(call: () => Promise<Order[]>, fallback: string): Promise<void> {
+    this.loading.set(true);
+    try {
+      this.orders.set(await call());
+      this.error.set(null);
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, fallback));
+    } finally {
+      this.loading.set(false);
     }
-    this.orders.update((list) => list.map((o) => (o.id === orderId ? { ...o, status: target } : o)));
-    return null;
+  }
+
+  private merge(order: Order): void {
+    this.orders.update((list) => [order, ...list.filter((o) => o.id !== order.id)]);
   }
 }

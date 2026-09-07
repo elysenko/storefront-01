@@ -62,12 +62,6 @@
               <a class="drop-item" routerLink="/login" (click)="closeMenus()">Sign in</a>
               <a class="drop-item" routerLink="/signup" (click)="closeMenus()">Create an account</a>
             }
-
-            @if (previewSwitch) {
-              <div class="drop-divider"></div>
-              <button type="button" class="drop-item subtle" (click)="previewAs('shopper')">{{ previewSwitch.shopper }}</button>
-              <button type="button" class="drop-item subtle" (click)="previewAs('admin')">{{ previewSwitch.admin }}</button>
-            }
           </div>
         }
       </div>

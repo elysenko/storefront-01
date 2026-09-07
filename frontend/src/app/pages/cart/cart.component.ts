@@ -31,12 +31,16 @@ export class CartComponent {
     Math.max(0, FREE_SHIPPING_THRESHOLD_CENTS - this.totalCents()),
   );
 
-  step(line: CartItem, delta: number): void {
-    this.cart.updateQty(line.id, line.qty + delta);
+  async step(line: CartItem, delta: number): Promise<void> {
+    // PATCH /api/cart/items/:id — a qty over stock comes back as a 400 naming
+    // the product, which the store surfaces in `error()`.
+    await this.cart.updateQty(line.id, line.qty + delta);
   }
 
-  remove(line: CartItem): void {
-    this.cart.removeItem(line.id);
-    this.toast.show(`${line.productName} removed from your cart.`);
+  async remove(line: CartItem): Promise<void> {
+    const error = await this.cart.removeItem(line.id);
+    if (!error) {
+      this.toast.show(`${line.productName} removed from your cart.`);
+    }
   }
 }

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CatalogStore, PAGE_SIZE } from '../../core/catalog.store';
 import { CartStore } from '../../core/cart.store';
+import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import type { Product } from '../../core/models';
 import { ProductCardComponent } from '../../shared/product-card.component';
@@ -20,6 +21,7 @@ export class CatalogComponent {
   private readonly router = inject(Router);
   private readonly catalog = inject(CatalogStore);
   private readonly cart = inject(CartStore);
+  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
 
   readonly loading = this.catalog.loading;
@@ -60,8 +62,13 @@ export class CatalogComponent {
     });
   }
 
-  addToCart(product: Product): void {
-    const error = this.cart.addItem(product, 1);
+  async addToCart(product: Product): Promise<void> {
+    if (!this.auth.isAuthenticated()) {
+      void this.router.navigate(['/login'], { queryParams: { redirect: '/cart' } });
+      return;
+    }
+    // The API is the authority on stock: a 400 comes back naming the product.
+    const error = await this.cart.addItem(product, 1);
     if (error) {
       this.toast.show(error, 'error');
       return;

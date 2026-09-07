@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../../core/toast.service';
 import type { SystemSetting } from '../../core/models';
-import { MOCK_SETTINGS, SERVICE_LABELS } from '../../core/mock-data';
+import { ApiService, apiErrorMessage } from '../../core/api.service';
 
 interface ServiceGroup {
   service: string;
@@ -12,9 +12,17 @@ interface ServiceGroup {
   configured: boolean;
 }
 
+/** Display names for the backing services the API resolves credentials for. */
+const SERVICE_LABELS: Record<string, string> = {
+  postgresql: 'PostgreSQL',
+  minio: 'MinIO object storage',
+};
+
 /**
- * Runtime credential config for each provisioned backing service. Values arrive
- * masked; a blank field leaves the stored secret untouched.
+ * Runtime credential config for each provisioned backing service, backed by
+ * GET/PATCH /api/admin/settings. The API resolves each key env-first and falls
+ * back to the stored override, and masks every secret before it leaves the
+ * process — a blank field leaves the stored value untouched.
  */
 @Component({
   selector: 'app-admin-settings',
@@ -26,11 +34,27 @@ interface ServiceGroup {
 })
 export class AdminSettingsComponent {
   private readonly toast = inject(ToastService);
+  private readonly api = inject(ApiService);
 
-  /** Backed by GET /api/admin/settings. */
-  readonly settings = signal<SystemSetting[]>([...MOCK_SETTINGS]);
-
+  readonly settings = signal<SystemSetting[]>([]);
   readonly drafts = signal<Record<string, string>>({});
+  readonly loading = signal(false);
+  readonly saving = signal(false);
+
+  constructor() {
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    this.loading.set(true);
+    try {
+      this.settings.set(await this.api.adminListSettings());
+    } catch (error) {
+      this.toast.show(apiErrorMessage(error, 'Service settings could not be loaded.'), 'error');
+    } finally {
+      this.loading.set(false);
+    }
+  }
 
   readonly groups = computed<ServiceGroup[]>(() => {
     const byService = new Map<string, SystemSetting[]>();
@@ -61,36 +85,40 @@ export class AdminSettingsComponent {
     if (!setting.configured) {
       return 'Not configured';
     }
-    return setting.secret ? setting.value.replace(/.(?=.{4})/g, '•') : setting.value;
+    return setting.value;
   }
 
   /** PATCH /api/admin/settings — upserts only the keys that were filled in. */
-  save(group: ServiceGroup): void {
+  async save(group: ServiceGroup): Promise<void> {
     const drafts = this.drafts();
-    const touched = group.settings.filter((s) => (drafts[s.key] ?? '').trim() !== '');
+    const values: Record<string, string> = {};
+    for (const setting of group.settings) {
+      const next = (drafts[setting.key] ?? '').trim();
+      if (next !== '') {
+        values[setting.key] = next;
+      }
+    }
 
-    if (touched.length === 0) {
+    if (Object.keys(values).length === 0) {
       this.toast.show('Nothing to save — fill in at least one field.', 'error');
       return;
     }
 
-    this.settings.update((list) =>
-      list.map((s) => {
-        const next = (drafts[s.key] ?? '').trim();
-        return s.service === group.service && next !== ''
-          ? { ...s, value: next, configured: true }
-          : s;
-      }),
-    );
-
-    this.drafts.update((current) => {
-      const remaining = { ...current };
-      for (const s of group.settings) {
-        delete remaining[s.key];
-      }
-      return remaining;
-    });
-
-    this.toast.show(`${group.label} credentials saved.`);
+    this.saving.set(true);
+    try {
+      this.settings.set(await this.api.adminSaveSettings(values));
+      this.drafts.update((current) => {
+        const remaining = { ...current };
+        for (const setting of group.settings) {
+          delete remaining[setting.key];
+        }
+        return remaining;
+      });
+      this.toast.show(`${group.label} credentials saved.`);
+    } catch (error) {
+      this.toast.show(apiErrorMessage(error, 'Those credentials could not be saved.'), 'error');
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

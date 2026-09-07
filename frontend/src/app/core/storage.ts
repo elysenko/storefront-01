@@ -1,5 +1,3 @@
-import { effect, type WritableSignal } from '@angular/core';
-
 /**
  * Namespaced browser storage.
  *
@@ -107,33 +105,4 @@ export function writeJson(key: string, value: unknown): void {
   } catch {
     /* non-fatal */
   }
-}
-
-/**
- * Preview-only persistence for a store's collection signal.
- *
- * Hydrates from namespaced storage on construction and writes back on every
- * change, so cart contents, placed orders and admin edits survive a hard
- * refresh — the behaviour the real server-side store gives us in production.
- *
- * Restore is fully guarded: any value that is not a well-formed entity array is
- * discarded and the seeded signal is kept, so a stale or corrupt key can never
- * blank the page.
- */
-export function hydrateAndPersist<T extends { id: string }>(
-  key: string,
-  target: WritableSignal<T[]>,
-): void {
-  try {
-    const restored = readValidated(key, isEntityArray);
-    if (restored) {
-      target.set(restored as T[]);
-    }
-  } catch {
-    removeKeys(key);
-  }
-
-  effect(() => {
-    writeJson(key, target());
-  });
 }

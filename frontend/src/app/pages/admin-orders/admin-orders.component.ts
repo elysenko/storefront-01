@@ -23,6 +23,12 @@ export class AdminOrdersComponent {
 
   readonly statuses = ORDER_STATUSES;
   readonly error = signal<string | null>(null);
+  readonly loading = this.ordersStore.loading;
+
+  constructor() {
+    // GET /api/admin/orders returns every order joined to the shopper's email.
+    void this.ordersStore.loadAll();
+  }
 
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
@@ -50,8 +56,10 @@ export class AdminOrdersComponent {
     return nextStatus(order.status);
   }
 
-  advance(order: Order, target: OrderStatus): void {
-    const failure = this.ordersStore.advanceStatus(order.id, target);
+  async advance(order: Order, target: OrderStatus): Promise<void> {
+    // The API allows placed -> shipped -> delivered only; anything else comes
+    // back as a 400 naming the attempted transition.
+    const failure = await this.ordersStore.advanceStatus(order.id, target);
     this.error.set(failure);
     if (!failure) {
       this.toast.show(`Order ${order.id} marked ${target}.`);

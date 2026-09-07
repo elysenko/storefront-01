@@ -63,7 +63,7 @@ export class CheckoutComponent {
     this.goToStep('review');
   }
 
-  placeOrder(): void {
+  async placeOrder(): Promise<void> {
     const user = this.auth.user();
     if (!user) {
       this.error.set('Sign in to place this order.');
@@ -71,12 +71,7 @@ export class CheckoutComponent {
     }
 
     this.placing.set(true);
-    const result = this.orders.placeOrder(
-      user.id,
-      user.email,
-      this.shipName().trim(),
-      this.shipAddress().trim(),
-    );
+    const result = await this.orders.placeOrder(this.shipName().trim(), this.shipAddress().trim());
     this.placing.set(false);
 
     if ('error' in result) {

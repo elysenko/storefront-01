@@ -1,10 +1,12 @@
 <div class="page">
   @if (!order()) {
-    <div class="card empty-state">
-      <h1>Order not found</h1>
-      <p>This order does not exist, or belongs to another account.</p>
-      <a class="btn btn-primary" routerLink="/orders">Back to your orders</a>
-    </div>
+    @if (!loading()) {
+      <div class="card empty-state">
+        <h1>Order not found</h1>
+        <p>This order does not exist, or belongs to another account.</p>
+        <a class="btn btn-primary" routerLink="/orders">Back to your orders</a>
+      </div>
+    }
   } @else {
     <nav class="crumbs" aria-label="Breadcrumb">
       <a routerLink="/orders">Your orders</a>

@@ -9,19 +9,23 @@
     <div>
       <h1>{{ heading() }}</h1>
       <p class="muted sub">
-        @if (editing) { Editing {{ existing?.name }} } @else { Added to the catalog immediately on save. }
+        @if (editing) { Editing {{ existing()?.name }} } @else { Added to the catalog immediately on save. }
       </p>
     </div>
   </div>
 
-  @if (editing && !existing) {
+  @if (editing && !existing() && !loading()) {
     <div class="card empty-state">
       <h2>Product not found</h2>
       <p>It may have already been removed.</p>
       <a class="btn btn-primary" routerLink="/admin/products">Back to products</a>
     </div>
-  } @else {
+  } @else if (!editing || existing()) {
     <form class="card form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      @if (saveError()) {
+        <div class="alert alert-error" role="alert">{{ saveError() }}</div>
+      }
+
       <label class="field">
         <span>Name</span>
         <input class="input" type="text" formControlName="name" placeholder="e.g. Wireless Headphones" />

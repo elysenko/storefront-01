@@ -70,10 +70,6 @@
       <button type="submit" class="btn btn-primary btn-block">Create account</button>
     </form>
 
-    @if (previewShortcut) {
-      <button type="button" class="preview-skip" (click)="skipSignup()">{{ previewShortcut }}</button>
-    }
-
     <p class="switch">
       Already have an account? <a routerLink="/login">Sign in</a>
     </p>

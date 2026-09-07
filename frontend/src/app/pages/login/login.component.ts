@@ -31,18 +31,15 @@ export class LoginComponent {
   readonly password = signal('');
   readonly error = signal<string | null>(null);
 
-  /**
-   * Preview-only shortcut. Held in TypeScript behind the build-time constant so
-   * esbuild drops it from the production bundle; it seeds the signed-in state
-   * directly and needs no credentials.
-   */
-  readonly previewShortcut = COLOSSUS_PREVIEW ? 'Skip login — Demo Mode' : null;
+  readonly submitting = signal(false);
 
-  submit(): void {
-    this.error.set(this.auth.login(this.email(), this.password(), this.redirect()));
-  }
-
-  skipLogin(): void {
-    this.auth.previewSignIn('shopper');
+  /** POST /api/auth/login; a 401 renders inline rather than navigating away. */
+  async submit(): Promise<void> {
+    if (this.submitting()) {
+      return;
+    }
+    this.submitting.set(true);
+    this.error.set(await this.auth.login(this.email(), this.password(), this.redirect()));
+    this.submitting.set(false);
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -29,7 +29,33 @@ export class OrderDetailComponent {
     initialValue: this.route.snapshot.paramMap,
   });
 
-  readonly order = computed(() => this.ordersStore.byId(this.params().get('id') ?? ''));
+  readonly orderId = computed(() => this.params().get('id') ?? '');
+  readonly order = computed(() => this.ordersStore.byId(this.orderId()));
+  readonly loading = this.ordersStore.loading;
+
+  constructor() {
+    effect(() => {
+      const id = this.orderId();
+      untracked(() => void this.ordersStore.loadOne(id));
+    });
+
+    // Review eligibility for each delivered line is the API's call, so ask for
+    // it as soon as the order's items are known.
+    effect(() => {
+      const items = this.order()?.items ?? [];
+      const delivered = this.order()?.status === 'delivered';
+      untracked(() => {
+        if (!delivered) {
+          return;
+        }
+        for (const item of items) {
+          if (item.productId) {
+            void this.catalog.loadEligibility(item.productId);
+          }
+        }
+      });
+    });
+  }
 
   readonly reachedIndex = computed(() => {
     const current = this.order();

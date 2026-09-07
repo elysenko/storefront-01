@@ -10,11 +10,6 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (COLOSSUS_PREVIEW) {
-    auth.previewEnsureSession();
-    return true;
-  }
-
   if (auth.isAuthenticated()) {
     return true;
   }
@@ -24,11 +19,6 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
 export const adminGuard: CanActivateFn = (): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
-
-  if (COLOSSUS_PREVIEW) {
-    auth.previewEnsureAdmin();
-    return true;
-  }
 
   return auth.isAdmin() ? true : router.createUrlTree(['/']);
 };

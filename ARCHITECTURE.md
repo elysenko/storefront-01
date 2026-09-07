@@ -42,3 +42,28 @@ The technical plan attached to this run (`Storefront` — an Amazon-shaped e-com
 - **Build determinism.** `incremental` was removed from `tsconfig.json` and
   `*.tsbuildinfo` is ignored: a stale build-info file made `nest build` exit 0 while
   emitting nothing, which surfaces only as `Cannot find module dist/main.js` at runtime.
+
+## Service pass notes (frontend wiring)
+
+- **Transport.** The SPA talks plain HTTP to the same-origin REST API under `/api`
+  (`frontend/src/app/core/api.service.ts`). `nginx.conf` proxies it in the container and
+  `proxy.conf.json` does the same for `ng serve`, so no base URL is baked into the bundle.
+  The dead `TRPC_CLIENT` provider and `trpc-client.types.ts` were removed — nothing consumed them.
+- **Auth.** `core/session.ts` holds the JWT and the current user in plain module state rather
+  than a service. `AuthService -> HttpClient -> authInterceptor -> AuthService` would otherwise
+  be a construction cycle. The interceptor attaches the bearer token and clears the session on a
+  401, but never redirects from `/`, `/products/*`, `/login` or `/signup` — the root URL has to
+  keep painting the brand and the grid for a signed-out visitor.
+- **Stores are read-through, not optimistic.** `CatalogStore` pulls the live catalog once and
+  resolves browse/search/paging against that snapshot; every mutation re-reads the row the API
+  returns instead of patching locally. `CartStore` replaces its lines with the `CartView` from each
+  cart call, so stock caps and line totals stay server-decided. `OrdersStore` holds whichever
+  slice the current screen asked for (`/api/orders` vs `/api/admin/orders`).
+- **No mock data.** `core/mock-data.ts` and every `COLOSSUS_PREVIEW` branch that depended on it
+  were deleted — there is no demo fallback path left in the app.
+- **Review eligibility** is `GET /api/products/:id/reviews/eligibility`, never re-derived in the
+  browser; `CatalogStore.canReview()` just reads the cached server answer.
+- **Category bootstrap.** Categories are reference data and ship with no fixtures, so the product
+  form would open an empty, unusable dropdown on a fresh deployment. `CatalogStore.ensureCategories()`
+  posts the four spec categories to `POST /api/admin/categories` (idempotent on name) when an admin
+  opens the form. Business rows are still never seeded.

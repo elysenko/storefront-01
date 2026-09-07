@@ -22,6 +22,14 @@ export class OrdersComponent {
   private readonly auth = inject(AuthService);
 
   readonly statuses = ORDER_STATUSES;
+  readonly loading = this.ordersStore.loading;
+  readonly loadError = this.ordersStore.error;
+
+  constructor() {
+    // GET /api/orders is already scoped to the caller and newest-first; the
+    // ?status= filter is applied locally so the counts stay live.
+    void this.ordersStore.loadMine();
+  }
 
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
