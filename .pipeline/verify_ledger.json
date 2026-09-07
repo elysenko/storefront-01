@@ -1,0 +1,90 @@
+[
+  {
+    "id": "a1-1",
+    "category": "missing_feature",
+    "file": "backend/prisma/seed/seed.js",
+    "description": "Seed script creates no categories, products, reviews, or orders and has no admin@demo/shopper@demo demo accounts, leaving the deployed catalog empty and violating the spec's normative seed-data acceptance scenario.",
+    "check": {
+      "kind": "grep",
+      "file": "backend/prisma/seed/seed.js",
+      "pattern": "Wireless Headphones",
+      "expect": "present"
+    },
+    "status": "open",
+    "raised_attempt": 1,
+    "times_raised": 1,
+    "fixed_by_commit": "bf1318121c93ecb0c738cda04e1742b5d5bb7cd8",
+    "patched_attempt": 1,
+    "reopen_reason": "deterministic check failed after patch"
+  },
+  {
+    "id": "a1-2",
+    "category": "test_missing",
+    "file": null,
+    "description": "No test verifies the seed produces 12 products across 4 categories with 2 out-of-stock, 3 reviews, and 1 delivered order, or that re-running the seed is idempotent.",
+    "check": {
+      "kind": "grep",
+      "file": "backend/src/admin/admin.service.spec.ts",
+      "pattern": "seed",
+      "expect": "present"
+    },
+    "status": "open",
+    "raised_attempt": 1,
+    "times_raised": 1,
+    "fixed_by_commit": "bf1318121c93ecb0c738cda04e1742b5d5bb7cd8",
+    "patched_attempt": 1,
+    "reopen_reason": "deterministic check failed after patch"
+  },
+  {
+    "id": "a1-3",
+    "category": "missing_feature",
+    "file": "docker-compose.yml",
+    "description": "docker-compose.yml defines only postgres and pgadmin services with no app/backend service, so docker compose up does not launch the application as the plan requires.",
+    "check": {
+      "kind": "grep",
+      "file": "docker-compose.yml",
+      "pattern": "backend:|app:",
+      "expect": "present"
+    },
+    "status": "open",
+    "raised_attempt": 1,
+    "times_raised": 1,
+    "fixed_by_commit": "bf1318121c93ecb0c738cda04e1742b5d5bb7cd8",
+    "patched_attempt": 1,
+    "reopen_reason": "deterministic check failed after patch"
+  },
+  {
+    "id": "a1-4",
+    "category": "test_missing",
+    "file": "backend/src/cart/cart.service.spec.ts",
+    "description": "No test exercises the qty < 1 rejection path for cart item add/update, leaving it verified only by DTO decorators rather than service behavior.",
+    "check": {
+      "kind": "grep",
+      "file": "backend/src/cart/cart.service.spec.ts",
+      "pattern": "qty.*< ?1|qty.*0",
+      "expect": "present"
+    },
+    "status": "fixed",
+    "raised_attempt": 1,
+    "times_raised": 1,
+    "fixed_by_commit": "bf1318121c93ecb0c738cda04e1742b5d5bb7cd8",
+    "patched_attempt": 1
+  },
+  {
+    "id": "a1-5",
+    "category": "test_missing",
+    "file": "backend/src/reviews/reviews.service.spec.ts",
+    "description": "No test exercises the rating outside 1-5 (0 or 6) rejection path at the service/HTTP layer, leaving it verified only by DTO decorators.",
+    "check": {
+      "kind": "grep",
+      "file": "backend/src/reviews/reviews.service.spec.ts",
+      "pattern": "rating.*0|rating.*6",
+      "expect": "present"
+    },
+    "status": "fixed",
+    "raised_attempt": 1,
+    "times_raised": 1,
+    "fixed_by_commit": "bf1318121c93ecb0c738cda04e1742b5d5bb7cd8",
+    "patched_attempt": 1
+  }
+]

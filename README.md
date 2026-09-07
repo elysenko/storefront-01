@@ -10,6 +10,15 @@ products, orders and service settings.
 
 ## Local development
 
+Full stack in containers (builds both images, runs migrations, serves the SPA on
+nginx proxying `/api/` to the API):
+
+```bash
+docker compose up --build              # postgres :5432, backend :3000, frontend :8080
+```
+
+Or for hot-reload development, run Postgres in a container and the two apps natively:
+
 ```bash
 docker compose up -d postgres          # Postgres 16 on :5432
 
@@ -42,11 +51,19 @@ Third-party credentials are always optional: a missing key degrades that feature
 
 ## Accounts
 
-Logins are platform-owned. `prisma/seed/seed.js` materializes one `colossus_accounts`
-row and one `User` per `COLOSSUS_ACCOUNTS_JSON` entry (bcryptjs hash in
-`User.passwordHash`), and the auth service verifies with `bcrypt.compare`. There are
-no demo credentials in the repo, and signup always creates a shopper — the role is
-never client-settable. Roles map as `ADMIN → admin`, everything else → `shopper`.
+Platform logins come from `prisma/seed/seed.js`, which materializes one
+`colossus_accounts` row and one `User` per `COLOSSUS_ACCOUNTS_JSON` entry (bcryptjs
+hash in `User.passwordHash`), verified by the auth service with `bcrypt.compare`.
+Signup always creates a shopper — the role is never client-settable. Roles map as
+`ADMIN → admin`, everything else → `shopper`.
+
+The same seed script also runs a demo-data stage, gated by `SEED_DEMO_DATA`
+(defaults on; set to `false` to disable) — the Dockerfile sets it explicitly since
+the OpenSpec "Seed data" scenario requires it on every deploy of this app. It seeds
+two fixed logins, `admin@demo` and `shopper@demo` (password `Demo1234!`), plus the
+4-category / 12-product catalog (2 out of stock, one "Wireless Headphones"), 3
+reviews, and 1 delivered order for `shopper@demo`. All writes are upserts or
+existence-guarded, so re-running the seed never duplicates a row.
 
 ## API
 
@@ -76,9 +93,10 @@ list.
 | PATCH | `/api/admin/orders/:id/status` | admin | only `placed→shipped→delivered` |
 | GET/PATCH | `/api/admin/settings` | admin | masked service credentials |
 
-The catalog ships empty — shipped seeds carry platform logins only. An admin creates
-the first category and products from the admin console (or `POST /api/admin/categories`
-then `POST /api/admin/products`).
+The catalog is populated by the seed's demo-data stage (see Accounts above). If it
+has been disabled (`SEED_DEMO_DATA=false`), an admin can create categories and
+products from the admin console instead (or `POST /api/admin/categories` then
+`POST /api/admin/products`).
 
 ## Commands
 

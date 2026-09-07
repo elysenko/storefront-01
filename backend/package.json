@@ -15,7 +15,6 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "node prisma/seed/seed.js",
-    "seed:demo": "node prisma/seed/demo-seed.js",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "test:e2e": "jest --config ./test/jest-e2e.json --passWithNoTests",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix"

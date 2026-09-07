@@ -89,6 +89,12 @@ FROM node:20-alpine AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+# This app's OpenSpec "Seed data" acceptance scenario normatively requires the
+# demo catalog/logins on every deploy of this single-environment app, so the
+# seed's demo-data stage (prisma/seed/seed.js, gated on SEED_DEMO_DATA) is
+# defaulted on here at the image level — an explicit, overridable env guard
+# rather than an unconditional write. Set SEED_DEMO_DATA=false to disable it.
+ENV SEED_DEMO_DATA=true
 COPY --from=build /app ./
 EXPOSE 3000
 # Locate the prisma schema (generated apps place it inconsistently) then auto-migrate,
