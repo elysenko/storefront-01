@@ -8,7 +8,7 @@
 
 ## Layout
 - `frontend/` — Angular 19 standalone SPA (project name: `frontend`). Home route (`/`) calls the tRPC `users.findAll` procedure and renders results.
-- `backend/` — NestJS 10 API with a `trpc` module (nestjs-trpc), a `users` router/service, a `health` module (`GET /health`, powered by `@nestjs/terminus`), and a `prisma` module/service.
+- `backend/` — NestJS REST API under the global `/api` prefix: `auth` (JWT + passport, `RolesGuard`), `catalog`, `reviews`, `cart`, `orders`, `admin` (products / categories / orders / settings), `health` (`/api/health`, `/api/health/deep`) and `prisma`. Swagger at `/api/docs`. The template's `trpc` and `users` modules were removed — the SPA talks plain HTTP to `/api`, so `nestjs-trpc` (which parses TypeScript sources at boot, absent from the runtime image) was dead weight and a startup risk.
 - `.pipeline/surface.json` — machine-readable manifest of routes, components, and `data-testid`s for the test_spec/Playwright pipeline.
 - `.colossus-acceptance.json` — acceptance contract read by the post-deploy render gate.
 - `colossus.yaml` — build/deploy manifest read by deploy agents (Angular frontend + NestJS backend, both served from the same container image per the template's Dockerfile).
@@ -28,3 +28,17 @@ The technical plan attached to this run (`Storefront` — an Amazon-shaped e-com
 ## Template sources
 - `template_dir = /app/scaffold-templates`
 - `template-enterprise/` copied directly into the project root (`frontend/` + `backend/` merged in, not nested under a subdirectory).
+
+## Backend pass notes (coder agent)
+
+- **Roles.** Prisma keeps the platform contract's `Role { USER MANAGER ADMIN }`; the API
+  and JWT speak the spec's vocabulary (`ADMIN → admin`, everything else → `shopper`).
+- **Ports.** `colossus.yaml` declares the backend on 3001 while `frontend/nginx.conf`
+  proxies to `backend:3000`. `src/main.ts` serves the same Express handler on both
+  (`PORT`, `ALT_PORT`) so neither assumption can break the deploy.
+- **No seeded business data.** `prisma/seed/seed.js` stays essential-only (platform
+  logins). The catalog therefore starts empty; `POST /api/admin/categories` and
+  `POST /api/admin/products` (which also accepts `categoryName`) let an admin bootstrap it.
+- **Build determinism.** `incremental` was removed from `tsconfig.json` and
+  `*.tsbuildinfo` is ignored: a stale build-info file made `nest build` exit 0 while
+  emitting nothing, which surfaces only as `Cannot find module dist/main.js` at runtime.

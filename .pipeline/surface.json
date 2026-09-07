@@ -1,21 +1,194 @@
 {
   "_generated": true,
   "_scaffolded_at": "2026-09-07T08:25:00Z",
-  "fileBudget": { "maxLines": 400, "hardLimit": 500 },
+  "fileBudget": {
+    "maxLines": 400,
+    "hardLimit": 500
+  },
   "routes": [
-    { "method": "GET", "path": "/health" },
-    { "method": "GET", "path": "/trpc/users.findAll" },
-    { "method": "GET", "path": "/trpc/users.findById" }
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/deep",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/docs",
+      "auth": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/signup",
+      "auth": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/categories",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/:id",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/:id/reviews",
+      "auth": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/api/products/:id/reviews/eligibility",
+      "auth": "optional-jwt"
+    },
+    {
+      "method": "POST",
+      "path": "/api/products/:id/reviews",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cart",
+      "auth": "jwt"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cart/items",
+      "auth": "jwt"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/cart/items/:id",
+      "auth": "jwt"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/cart/items/:id",
+      "auth": "jwt"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/:id",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/products",
+      "auth": "admin"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/products",
+      "auth": "admin"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/admin/products/:id",
+      "auth": "admin"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/products/:id",
+      "auth": "admin"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/categories",
+      "auth": "admin"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/categories",
+      "auth": "admin"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/orders",
+      "auth": "admin"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/admin/orders/:id/status",
+      "auth": "admin"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/settings",
+      "auth": "admin"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/admin/settings",
+      "auth": "admin"
+    }
   ],
   "components": [
-    { "selector": "app-root", "file": "frontend/src/app/app.component.ts", "maxLines": 400 },
-    { "selector": "app-home", "file": "frontend/src/app/home/home.component.ts", "maxLines": 400 }
+    {
+      "selector": "app-root",
+      "file": "frontend/src/app/app.component.ts",
+      "maxLines": 400
+    },
+    {
+      "selector": "app-home",
+      "file": "frontend/src/app/home/home.component.ts",
+      "maxLines": 400
+    }
   ],
   "testIds": [
-    { "id": "home-main", "element": "main", "component": "app-home" },
-    { "id": "home-title", "element": "h1", "component": "app-home" },
-    { "id": "users-loading", "element": "p", "component": "app-home" },
-    { "id": "users-error", "element": "p", "component": "app-home" },
-    { "id": "users-list", "element": "ul", "component": "app-home" }
+    {
+      "id": "home-main",
+      "element": "main",
+      "component": "app-home"
+    },
+    {
+      "id": "home-title",
+      "element": "h1",
+      "component": "app-home"
+    },
+    {
+      "id": "users-loading",
+      "element": "p",
+      "component": "app-home"
+    },
+    {
+      "id": "users-error",
+      "element": "p",
+      "component": "app-home"
+    },
+    {
+      "id": "users-list",
+      "element": "ul",
+      "component": "app-home"
+    }
   ]
 }
