@@ -8,6 +8,13 @@
 # template-web/Dockerfile.frontend.
 FROM ubuntu:30500/colossus-base-angular:v2 AS builder
 WORKDIR /app
+# colossus.yaml declares baseHref: "/{{IMAGE_NAME}}/" — the deploy agent substitutes
+# the real deployment slug (e.g. "/storefront-01/") and is expected to pass it through
+# as this build arg so the built index.html's <base href> (and therefore every
+# relative asset URL and the Angular Router's path resolution) matches the path the
+# ingress actually serves this app under. Defaults to "/" for root-served deploys and
+# local docker-compose, where no prefix applies.
+ARG BASE_HREF=/
 COPY package.json package-lock.json* ./
 # Compare only dependencies+devDependencies — the app may rename itself, but the dep
 # SET is what the seed prebaked. Byte-compare would miss on harmless name edits.
@@ -19,7 +26,7 @@ RUN if node -e "const a=require('./package.json'),b=require('/opt/colossus/angul
       npm install --no-audit --no-fund --loglevel=error; \
     fi
 COPY . .
-RUN npm run build
+RUN npx ng build --configuration production --base-href "$BASE_HREF" --deploy-url "$BASE_HREF"
 
 FROM nginx:alpine
 COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
