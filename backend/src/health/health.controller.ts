@@ -1,6 +1,31 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { Controller, Get, HttpStatus, ServiceUnavailableException } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
+
+const APP_NAME = 'storefront-01';
+
+function resolveVersion(): string {
+  const candidates = [
+    join(__dirname, '..', '..', 'package.json'),
+    join(__dirname, '..', '..', '..', 'package.json'),
+    join(process.cwd(), 'package.json'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const pkg = JSON.parse(readFileSync(candidate, 'utf8')) as { version?: string };
+      if (pkg.version && pkg.version.length > 0) {
+        return pkg.version;
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  return process.env.npm_package_version ?? '0.0.0';
+}
+
+const APP_VERSION = resolveVersion();
 
 @ApiTags('health')
 @Controller('health')
@@ -11,6 +36,13 @@ export class HealthController {
   @Get()
   live(): { status: string } {
     return { status: 'ok' };
+  }
+
+  /** Version: returns the application name and version. Never touches the database. */
+  @ApiOkResponse({ description: 'Application version info' })
+  @Get('version')
+  version(): { status: string; app: string; version: string } {
+    return { status: 'ok', app: APP_NAME, version: APP_VERSION };
   }
 
   /** Readiness: the database answers. 503 when it does not. */

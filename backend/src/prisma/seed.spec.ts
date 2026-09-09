@@ -10,7 +10,21 @@
  */
 import * as bcrypt from 'bcryptjs';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const seedJs = require('../../prisma/seed/seed.js') as {
+  DEMO_FLAG: string;
+  CATEGORY_NAMES: string[];
+  REVIEW_PRODUCT_NAMES: string[];
+  SEED_ORDER_PRODUCT_NAME: string;
+  buildDemoLogins: () => Array<{ email: string; password: string; role: string }>;
+  buildDemoProducts: () => Array<{ name: string; category: string; stockQty: number; [k: string]: unknown }>;
+  seedDemoLogins: (prisma: unknown) => Promise<Record<string, { id: string }>>;
+  seedCategories: (prisma: unknown) => Promise<Record<string, string>>;
+  seedProducts: (prisma: unknown, idByName: Record<string, string>) => Promise<Array<{ id: string; name: string; [k: string]: unknown }>>;
+  seedReviews: (prisma: unknown, products: unknown[], userId: string) => Promise<number>;
+  seedDeliveredOrder: (prisma: unknown, products: unknown[], userId: string) => Promise<unknown>;
+  seedDemoData: (prisma: unknown, env: Record<string, string>) => Promise<void>;
+};
 const {
   DEMO_FLAG,
   CATEGORY_NAMES,
@@ -24,7 +38,7 @@ const {
   seedReviews,
   seedDeliveredOrder,
   seedDemoData,
-} = require('../../prisma/seed/seed.js');
+} = seedJs;
 
 describe('seed.js demo data shape', () => {
   it('defines exactly the 4 spec categories', () => {
