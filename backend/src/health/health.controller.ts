@@ -1,6 +1,9 @@
 import { Controller, Get, HttpStatus, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
+import { APP_NAME, resolveAppVersion } from './app-version';
+
+const APP_VERSION = resolveAppVersion();
 
 @ApiTags('health')
 @Controller('health')
@@ -11,6 +14,12 @@ export class HealthController {
   @Get()
   live(): { status: string } {
     return { status: 'ok' };
+  }
+
+  /** Version: returns app name and version. Never touches the database. */
+  @Get('version')
+  version(): { status: string; app: string; version: string } {
+    return { status: 'ok', app: APP_NAME, version: APP_VERSION };
   }
 
   /** Readiness: the database answers. 503 when it does not. */
