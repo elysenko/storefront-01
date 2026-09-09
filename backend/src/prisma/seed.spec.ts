@@ -10,7 +10,7 @@
  */
 import * as bcrypt from 'bcryptjs';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-require-imports */
 const {
   DEMO_FLAG,
   CATEGORY_NAMES,
@@ -25,6 +25,7 @@ const {
   seedDeliveredOrder,
   seedDemoData,
 } = require('../../prisma/seed/seed.js');
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 describe('seed.js demo data shape', () => {
   it('defines exactly the 4 spec categories', () => {
