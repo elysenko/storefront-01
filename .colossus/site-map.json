@@ -1,0 +1,95 @@
+{
+  "site": {
+    "name": "tu-prep-hdtygprt",
+    "site_id": "tu-prep-hdtygprt"
+  },
+  "meta": {
+    "generated_by": "declared"
+  },
+  "front_end": {
+    "pages": [
+      {
+        "name": "Home",
+        "page_id": "home",
+        "url": "/",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Orders",
+        "page_id": "admin-orders",
+        "url": "/admin/orders",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Products",
+        "page_id": "admin-products",
+        "url": "/admin/products",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Edit",
+        "page_id": "admin-products-id-edit",
+        "url": "/admin/products/:id/edit",
+        "linked_page_ids": []
+      },
+      {
+        "name": "New",
+        "page_id": "admin-products-new",
+        "url": "/admin/products/new",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Settings",
+        "page_id": "admin-settings",
+        "url": "/admin/settings",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Cart",
+        "page_id": "cart",
+        "url": "/cart",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Checkout",
+        "page_id": "checkout",
+        "url": "/checkout",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Login",
+        "page_id": "login",
+        "url": "/login",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Orders",
+        "page_id": "orders",
+        "url": "/orders",
+        "linked_page_ids": []
+      },
+      {
+        "name": ":id",
+        "page_id": "orders-id",
+        "url": "/orders/:id",
+        "linked_page_ids": []
+      },
+      {
+        "name": ":id",
+        "page_id": "products-id",
+        "url": "/products/:id",
+        "linked_page_ids": []
+      },
+      {
+        "name": "Signup",
+        "page_id": "signup",
+        "url": "/signup",
+        "linked_page_ids": []
+      }
+    ]
+  },
+  "back_end": {
+    "tables": []
+  },
+  "generated_by": "declared"
+}
